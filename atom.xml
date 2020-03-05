@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://suika.rumia.ml</id>
-    <title>Gridea</title>
-    <updated>2020-03-05T02:05:46.958Z</updated>
+    <title>すいかの幻想郷</title>
+    <updated>2020-03-05T02:50:19.029Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://suika.rumia.ml"/>
     <link rel="self" href="https://suika.rumia.ml/atom.xml"/>
-    <subtitle>温故而知新</subtitle>
+    <subtitle>绝圣弃智，大盗乃止</subtitle>
     <logo>https://suika.rumia.ml/images/avatar.png</logo>
     <icon>https://suika.rumia.ml/favicon.ico</icon>
-    <rights>All rights reserved 2020, Gridea</rights>
+    <rights>All rights reserved 2020, すいかの幻想郷</rights>
     <entry>
         <title type="html"><![CDATA[Hello Gridea]]></title>
         <id>https://suika.rumia.ml/post/hello-gridea/</id>
