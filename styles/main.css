@@ -1885,10 +1885,10 @@ blockquote:before {
   font-weight: bold;
 }
 body {
-      background-color: #eee;
+      background-color: #fff5f5;
     }
     .nav-toggle .line {
-      background-color: #eee !important;
+      background-color: #fff5f5 !important;
     }.header {
         width: 960px;
         margin: 0 auto;
@@ -1924,7 +1924,7 @@ body {
     .node-title::before {
       background-color: #555;
     }.bg-color {
-      background-color: #fff;
+      background-color: #dee2e6;
     }a {
       color: #555;
     }
@@ -1986,10 +1986,10 @@ body {
       border-bottom-color: #fc6423;
     }
       .site-meta {
-        background: #000 !important;
+        background: #f8f9fa !important;
       }
       .head-top-line {
-        background: #000 !important;
+        background: #f8f9fa !important;
       }
     .brand {
       background: #000;
