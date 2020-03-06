@@ -4580,3 +4580,33 @@ body:not(.lg-from-hash) .lg-outer.lg-start-zoom .lg-item.lg-complete .lg-object 
   -o-transition: left 1s cubic-bezier(0, 0, 0.25, 1) 0s, opacity 0.1s ease 0s;
   transition: left 1s cubic-bezier(0, 0, 0.25, 1) 0s, opacity 0.1s ease 0s;
 }
+.round-shape-one {
+  width: 20px;
+  height: 20px;
+  border: 3px solid #fe8f8f;
+  border-radius: 50%;
+  top: 15%;
+  left: 0;
+  -webkit-animation: animationFramesOne 15s infinite linear;
+  animation: animationFramesOne 15s infinite linear;
+}
+@keyframes animationFramesOne {
+  0% {
+    transform: translate(0) rotate(0deg);
+  }
+  20% {
+    transform: translate(73px, -1px) rotate(36deg);
+  }
+  40% {
+    transform: translate(141px, 72px) rotate(72deg);
+  }
+  60% {
+    transform: translate(83px, 122px) rotate(108deg);
+  }
+  80% {
+    transform: translate(-40px, 72px) rotate(144deg);
+  }
+  to {
+    transform: translate(0) rotate(0deg);
+  }
+}
