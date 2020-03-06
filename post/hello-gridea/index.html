@@ -282,9 +282,30 @@ function change(){
 
 
 </div>
-
+<div class="round-shape-one" ></div>
 <div class="doc_comments">
 
+          
+			<div id="gitalk-container"></div>
+            <link href="https://cdn.bootcss.com/gitalk/1.5.0/gitalk.min.css" rel="stylesheet">
+<script>
+  var gitalk = new Gitalk({
+    clientID: '4ed2d0f2177557660943',
+    clientSecret: 'a269fb9ee0fb1f96e9b81c0f1e2bd7a09254b0fc',
+    repo: 'suikascarlet.github.io',
+    owner: 'suikascarlet',
+    admin: ['suikascarlet'],
+    id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+    distractionFreeMode: false  // Facebook-like distraction free mode
+  })
+  gitalk.render('gitalk-container')
+</script>
+
+
+          
+			  
+          
+        
 </div>
 <script>
 var link="";$("img").each((i,o)=>{var o=$(o);if(o.attr("src").indexOf("sinaimg")>0||o.attr("src").indexOf("qpic")>0||o.attr("src").indexOf("baidu")>0||o.attr("src").indexOf("sinaimg")>0){o.attr("referrerpolicy","no-referrer");link=o.attr("src");o.attr("src",link);}});
