@@ -9,7 +9,7 @@
 <meta name="description" content="绝圣弃智，大盗乃止">
 <meta http-equiv="Access-Control-Allow-Origin" content="*">
 
-<title>写在开始的碎碎念 | すいかの幻想郷</title>
+<title>Created slice &amp;amp;amp; Starting Session | すいかの幻想郷</title>
 <link href="https://suika.rumia.ml/styles/main.css" type="text/css" rel="stylesheet"/>
 <link rel="stylesheet" href="//cdn.bootcss.com/KaTeX/0.10.2/katex.min.css"/>
 <script src="//cdn.bootcss.com/KaTeX/0.10.2/katex.min.js"></script>
@@ -150,7 +150,7 @@ var r = 0;
 <div class="post_page" >
 <div class="post">
   <div class="post_title sm_margin">
-    <h2><a>写在开始的碎碎念</a>
+    <h2><a>Created slice &amp;amp;amp; Starting Session</a>
     </h2>
   </div>
 <script>
@@ -193,16 +193,20 @@ function change(){
   <div class="post_details">
     <div class="round-shape-one" ></div>
     <div class="info"><i class="fa fa-calendar"></i>
-<span class="date_info">2020-02-20</span>
+<span class="date_info">2020-02-26</span>
 <i class="fa fa-eye"></i>
 <span class="date_info"><span id="busuanzi_value_page_pv"></span> Views</span>
 <i class="fa fa-bookmark-o"></i>
 <span class="tags_info weaklink">
 	
+	<a href="https://suika.rumia.ml/tag/ZzR4S4btH/" class="tag">log</a>
+
+	<a href="https://suika.rumia.ml/tag/DG7P_jQz2S/" class="tag">RHEL</a>
+
 </span>
 <i class="fa fa-anchor"></i>
 <span style="margin-right:15px">
-346字
+303字
 </span>
 <i class="fa fa-clock-o"></i>
 <span style="margin-right:15px">
@@ -222,11 +226,25 @@ function change(){
     <div class="post_content markdown">
 	
     <div name="show" id="show">
-	<p class="md_block"><span class="md_line md_line_start md_line_end"><p>好长的一个假期，自工作以来再没想过能有这样长的一个假。<br>
-不能出门的日子有人会觉得无聊，可是我不会啊，锻炼身体、做饭、学习、炒汇、阅读、补电影，被宅在家里的日子，每一天都感觉不够用。终于有大块的时间做自己想做的事情了，多幸福。从这个意义上是不是要感谢一下这次瘟疫？<br>
-在某个阳光明媚的午后突然就觉得应该记录一下这样难得的日子，继而就想起前年搭的那个小站。那是第一台VPS，为了榨取它的价值，不仅被我用来搭梯子，也被我用作记录生活和想法。陆陆续续写了大半年，后来到期了就没有续费，于是在telegraph做了个简单的备份，算是给自己留给回忆。如今又有了记录的想法，为了避免上一次荒废的悲剧，我决定还是依赖github来建静态站，这样没有成本，可以最大限度的避免外因导致的前功尽弃。<br>
-于是，现在这个界面出现了。我将在此记录日常的想法、生活的点滴以及技术的学习，写下自己的文字，记录生命中的点滴。<br>
-唯愿此事能长久！</p>
+	<p class="md_block"><span class="md_line md_line_start md_line_end"><h4 id="背景">背景：</h4>
+<p>RHEL7的日志（/var/log/message）里总有如下log，甚至很长一段时间内整个log都是这些内容：</p>
+<pre><code>example.com systemd: Created slice user-0.slice.
+example.com systemd: Starting Session 150 of user root.
+example.com systemd: Started Session 150 of user root.
+example.com systemd: Created slice user-0.slice.
+example.com systemd: Starting Session 151 of user root.
+example.com systemd: Started Session 151 of user root.
+</code></pre>
+<h4 id="过滤">过滤：</h4>
+<p>照红帽的官方说法，这是居然是正常情况，只要用户登录就会记录这些日志，如果不想记录这些内容需要主动将其过滤掉，方法如下：</p>
+<pre><code>echo 'if $programname == &quot;systemd&quot; and ($msg contains &quot;Starting Session&quot; or $msg contains &quot;Started Session&quot; or $msg contains &quot;Created slice&quot; or $msg contains &quot;Starting user-&quot; or $msg contains &quot;Starting User Slice of&quot; or $msg contains &quot;Removed session&quot; or $msg contains &quot;Removed slice User Slice of&quot; or $msg contains &quot;Stopping User Slice of&quot;) then stop' &gt;/etc/rsyslog.d/ignore-systemd-session-slice.conf
+</code></pre>
+<p>然后，重启rsyslog服务：</p>
+<pre><code>systemctl restart rsyslog
+</code></pre>
+<h4 id="其他">其他：</h4>
+<p>以上方法只对本地日志起作用，远程日志系统不适用。<br>
+如果远程日志要过滤此类日志，需要把上述规则写进/etc/rsyslog.conf，此时要写在发送到日志服务器之前，即. @@sys-log server这一行前。</p>
 </span></p></div><div id = "warn"></div>
 	<br>
 	<hr>
@@ -251,13 +269,22 @@ function change(){
 
 <div style="width:100%;overflow:hidden">
 
+          <div style="float:right;text-align:right;color:#ccc;font-size:18px;width:50%;">
+            Next
+            <a href="https://suika.rumia.ml/post/mumbler/">
+              <p class="post-title">
+                <b>写在开始的碎碎念</b>
+              </p>
+            </a>
+          </div>
+
 
 
           <div style="float:left;text-align:left;color:#ccc;font-size:18px;width:50%;">
             Previous
-            <a href="https://suika.rumia.ml/post/created-slice-andampamp-starting-session/">
+            <a href="https://suika.rumia.ml/post/ceph-zabbix-setup/">
               <p class="post-title">
-                <b>Created slice &amp;amp;amp; Starting Session</b>
+                <b>CEPH Nautilus Zabbix module Setup</b>
               </p>
             </a>
           </div>
@@ -304,7 +331,7 @@ imgList.forEach(img => {
   div1.appendChild(figuration)}
 })
 $('img').on('error',function(){$(this).prop('src','https://suika.rumia.ml/media/images/broken.jpg')});$(".md_block a").attr("rel","external nofollow");$("a[rel='external nofollow']").attr("target","_blank");$("a[href^='#']").removeAttr("target");$("a.ex").removeAttr("rel");$("a.ex").removeAttr("target");
-content="<div class='warn'>本文最后更新于2020-02-20，已超过 1 年没有更新，涉及的内容可能已经失效！</div>";var date1="2020-02-20 16:30:43";date1=date1.replace("-","/");var date2=new Date();var date3=date2.getTime()-new Date(date1).getTime();var days=Math.floor(date3/(24*3600*1000));if(days>=365){document.getElementById("warn").innerHTML=content};
+content="<div class='warn'>本文最后更新于2020-02-26，已超过 1 年没有更新，涉及的内容可能已经失效！</div>";var date1="2020-02-26 15:40:16";date1=date1.replace("-","/");var date2=new Date();var date3=date2.getTime()-new Date(date1).getTime();var days=Math.floor(date3/(24*3600*1000));if(days>=365){document.getElementById("warn").innerHTML=content};
 $('#pjax-container').lightGallery({
     selector: '.back'
 });
@@ -315,6 +342,23 @@ $('#pjax-container').lightGallery({
 
       </div>
 <div class="toc">
+<ul class="markdownIt-TOC">
+<li>
+<ul>
+<li>
+<ul>
+<li>
+<ul>
+<li><a href="#%E8%83%8C%E6%99%AF">背景：</a></li>
+<li><a href="#%E8%BF%87%E6%BB%A4">过滤：</a></li>
+<li><a href="#%E5%85%B6%E4%BB%96">其他：</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
 
 </div>
     </div>
