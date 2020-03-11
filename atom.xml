@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://suika.rumia.ml</id>
     <title>すいかの幻想郷</title>
-    <updated>2020-03-11T02:29:57.016Z</updated>
+    <updated>2020-03-11T02:38:57.345Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://suika.rumia.ml"/>
     <link rel="self" href="https://suika.rumia.ml/atom.xml"/>
@@ -81,8 +81,8 @@ https://www.cnblogs.com/lbjstill/p/12169820.html</p>
     </entry>
     <entry>
         <title type="html"><![CDATA[写在开始的碎碎念]]></title>
-        <id>https://suika.rumia.ml/post/mumbler /</id>
-        <link href="https://suika.rumia.ml/post/mumbler /">
+        <id>https://suika.rumia.ml/post/mumbler/</id>
+        <link href="https://suika.rumia.ml/post/mumbler/">
         </link>
         <updated>2020-02-20T08:30:43.000Z</updated>
         <content type="html"><![CDATA[<p>好长的一个假期，自工作以来再没想过能有这样长的一个假。<br>
