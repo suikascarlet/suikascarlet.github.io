@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://suika.rumia.ml</id>
     <title>すいかの幻想郷</title>
-    <updated>2020-03-11T02:38:57.345Z</updated>
+    <updated>2020-03-11T07:19:31.535Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://suika.rumia.ml"/>
     <link rel="self" href="https://suika.rumia.ml/atom.xml"/>
@@ -16,68 +16,6 @@
         <link href="https://suika.rumia.ml/post/ceph-zabbix-setup/">
         </link>
         <updated>2020-03-10T07:13:58.000Z</updated>
-        <content type="html"><![CDATA[<p>CEPH可以通过mgr节点的zabbix模块实现监控<br>
-不同于普通的agent模式，CEPH自带的zabbix模块通过trapper模式工作，mgr节点收集集群信息并向Zabbix Server发送。</p>
-<h3 id="1-环境说明">1、环境说明：</h3>
-<p>3节点CEPH集群，每个node都是mgr节点;<br>
-部署Nautilus 14.2.7；<br>
-Zabbix Server版本：4.2.1</p>
-<h3 id="2-安装部署">2、安装部署：</h3>
-<p>在所有mgr节点上安装zabbix-sender<br>
-<strong>配置yum：</strong></p>
-<pre><code># rpm -Uvh https://repo.zabbix.com/zabbix/4.4/rhel/7/x86_64/zabbix-release-4.4-1.el7.noarch.rpm
-</code></pre>
-<p><strong>安装sender：</strong></p>
-<pre><code># yum install zabbix-sender -y
-</code></pre>
-<h3 id="3-配置zabbix模块">3、配置zabbix模块：</h3>
-<p>在任意一个mgr节点上执行如下配置：<br>
-启用zabbix module：</p>
-<pre><code># ceph mgr module enable zabbix
-</code></pre>
-<p>指定zabbix server，如果有多个可以用&quot;,&quot;隔开，并且可以添加&quot;:&quot;来指定服务器端口，此处只有最简单的配置：</p>
-<pre><code># ceph zabbix config-set zabbix_host zabbix.test.com
-</code></pre>
-<p>指定zabbix_sender的位置：</p>
-<pre><code># which zabbix_sender 
-/usr/bin/zabbix_sender
-
-
-#ceph zabbix config-set zabbix_sender /usr/bin/zabbix_sender
-Configuration option zabbix_sender updated
-</code></pre>
-<p>指定identifier，这里很奇怪，只能是某个mgr节点的主机名，其他的可以设置成功但是发送失败，不知道我哪里配的有问题：</p>
-<pre><code># ceph zabbix config-set identifier &quot;ceph01.test.com&quot;
-</code></pre>
-<p>后面如果有需要可以定义server的端口等，命令跟前面的相仿，这里就不配了。<br>
-查看一下当前的配置：</p>
-<pre><code># ceph zabbix config-show
-</code></pre>
-<p>查看一下自带的监控模板，后面会用到：</p>
-<pre><code># find / -iname zabbix_template.xml
-/usr/share/ceph/mgr/zabbix/zabbix_template.xml
-</code></pre>
-<h3 id="4-配置zabbix-server">4、配置zabbix server：</h3>
-<p>登录Zabbix Web UI导入前面找到的监控模板，模板也可以在<a href="http://www.voidcn.com/link?url=https://github.com/ceph/ceph/tree/master/src/pybind/mgr/zabbix">github</a>中找，默认选项导入即可：</p>
-<p><img src="https://suika.rumia.ml/post-images/1583826557541.png" alt="" loading="lazy"><br>
-<img src="https://suika.rumia.ml/post-images/1583826581767.png" alt="" loading="lazy"></p>
-<p>创建主机组：<br>
-<img src="https://suika.rumia.ml/post-images/1583826608847.png" alt="" loading="lazy"></p>
-<p>添加主机并关联主机组和模板：</p>
-<figure data-type="image" tabindex="1"><img src="https://suika.rumia.ml/post-images/1583826718228.png" alt="" loading="lazy"></figure>
-<figure data-type="image" tabindex="2"><img src="https://suika.rumia.ml/post-images/1583826726630.png" alt="" loading="lazy"></figure>
-<figure data-type="image" tabindex="3"><img src="https://suika.rumia.ml/post-images/1583826768418.png" alt="" loading="lazy"></figure>
-<p>如果有需要主机可以关联多个模板，比如系统的监控<br>
-至此配置完成。</p>
-<h3 id="5-测试配置">5、测试配置</h3>
-<p>任意一台mgr节点测试：</p>
-<pre><code># ceph zabbix send 
-Sending data to Zabbix
-</code></pre>
-<p>如果发送不成功会导致ceph健康状态告警，检查端口通信情况及zabbix server的trapper模式是否被禁用，以及上面的步骤是不是哪里配置错了。</p>
-<p>参考资料：https://docs.ceph.com/docs/master/mgr/zabbix/<br>
-https://www.cnblogs.com/lbjstill/p/12169820.html</p>
-]]></content>
     </entry>
     <entry>
         <title type="html"><![CDATA[写在开始的碎碎念]]></title>
@@ -85,11 +23,5 @@ https://www.cnblogs.com/lbjstill/p/12169820.html</p>
         <link href="https://suika.rumia.ml/post/mumbler/">
         </link>
         <updated>2020-02-20T08:30:43.000Z</updated>
-        <content type="html"><![CDATA[<p>好长的一个假期，自工作以来再没想过能有这样长的一个假。<br>
-不能出门的日子有人会觉得无聊，可是我不会啊，锻炼身体、做饭、学习、炒汇、阅读、补电影，被宅在家里的日子，每一天都感觉不够用。终于有大块的时间做自己想做的事情了，多幸福。从这个意义上是不是要感谢一下这次瘟疫？<br>
-在某个阳光明媚的午后突然就觉得应该记录一下这样难得的日子，继而就想起前年搭的那个小站。那是第一台VPS，为了榨取它的价值，不仅被我用来搭梯子，也被我用作记录生活和想法。陆陆续续记了大半年，后来到期了就没有续费，只是简单的备份到了telegraph，如今又有了记录的想法，为了避免上一次荒废的悲剧，我决定还是依赖github来建静态站，这样没有成本，可以最大限度的避免外因导致的前功尽弃。<br>
-于是，现在这个界面出现了。我将在此记录日常的想法、生活的点滴以及技术的学习，写下自己的文字，记录生命中的点滴。<br>
-唯愿此事能长久！</p>
-]]></content>
     </entry>
 </feed>
