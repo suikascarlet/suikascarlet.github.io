@@ -9,7 +9,7 @@
 <meta name="description" content="绝圣弃智，大盗乃止">
 <meta http-equiv="Access-Control-Allow-Origin" content="*">
 
-<title>写在开始的碎碎念 | すいかの幻想郷</title>
+<title>解决UWP应用无法联网的三种方法 | すいかの幻想郷</title>
 <link href="https://suika.rumia.ml/styles/main.css" type="text/css" rel="stylesheet"/>
 <link rel="stylesheet" href="//cdn.bootcss.com/KaTeX/0.10.2/katex.min.css"/>
 <script src="//cdn.bootcss.com/KaTeX/0.10.2/katex.min.js"></script>
@@ -150,7 +150,7 @@ var r = 0;
 <div class="post_page" >
 <div class="post">
   <div class="post_title sm_margin">
-    <h2><a>写在开始的碎碎念</a>
+    <h2><a>解决UWP应用无法联网的三种方法</a>
     </h2>
   </div>
 <script>
@@ -193,20 +193,22 @@ function change(){
   <div class="post_details">
     <div class="round-shape-one" ></div>
     <div class="info"><i class="fa fa-calendar"></i>
-<span class="date_info">2020-02-20</span>
+<span class="date_info">2020-03-12</span>
 <i class="fa fa-eye"></i>
 <span class="date_info"><span id="busuanzi_value_page_pv"></span> Views</span>
 <i class="fa fa-bookmark-o"></i>
 <span class="tags_info weaklink">
 	
+	<a href="https://suika.rumia.ml/tag/dnlR6zux3/" class="tag">UWP</a>
+
 </span>
 <i class="fa fa-anchor"></i>
 <span style="margin-right:15px">
-346字
+905字
 </span>
 <i class="fa fa-clock-o"></i>
 <span style="margin-right:15px">
-2 min read
+4 min read
 </span>
 <span style="margin-right:15px">
 </span>
@@ -222,11 +224,45 @@ function change(){
     <div class="post_content markdown">
 	
     <div name="show" id="show">
-	<p class="md_block"><span class="md_line md_line_start md_line_end"><p>好长的一个假期，自工作以来再没想过能有这样长的一个假。<br>
-不能出门的日子有人会觉得无聊，可是我不会啊，锻炼身体、做饭、学习、炒汇、阅读、补电影，被宅在家里的日子，每一天都感觉不够用。终于有大块的时间做自己想做的事情了，多幸福。从这个意义上是不是要感谢一下这次瘟疫？<br>
-在某个阳光明媚的午后突然就觉得应该记录一下这样难得的日子，继而就想起前年搭的那个小站。那是第一台VPS，为了榨取它的价值，不仅被我用来搭梯子，也被我用作记录生活和想法。陆陆续续写了大半年，后来到期了就没有续费，于是在telegraph做了个简单的备份，算是给自己留给回忆。如今又有了记录的想法，为了避免上一次荒废的悲剧，我决定还是依赖github来建静态站，这样没有成本，可以最大限度的避免外因导致的前功尽弃。<br>
-于是，现在这个界面出现了。我将在此记录日常的想法、生活的点滴以及技术的学习，写下自己的文字，记录生命中的点滴。<br>
-唯愿此事能长久！</p>
+	<p class="md_block"><span class="md_line md_line_start md_line_end"><p>surface Pro 6又坏了，微软的硬件好垃圾，一年多坏了3次，再不会买了，影响工作效率。每次送修的结果就是所有东西都要重配一遍，这次是换机，更彻底一点。然后，又遇到了当初第一次用surface的时候遇到的问题——UWP应用联网。于是把备份的一篇文字直接拿来解决这个问题，再发一遍方便以后找。</p>
+<hr>
+<p>从arch到win10各种不适应，最近这种不适应在一个始料未及的事情上表现的尤为明显——只要开了全局代理，微软自家的UWP程序就无法联网了。</p>
+<p>对此，在下也是服气。</p>
+<p>然而，发现问题不解决不是吾辈的作风，于是开始找各种解决方案，顺带了解了一下UWP。</p>
+<p>这玩意出来也好几年了，一直不温不火的，以至于我从来没有注意到还有这么个玩意。据说所有UWP应用均运行在被称为App Container的虚拟沙箱环境中，其安全性胜于传统的EXE应用。但问题也出在这里，安全的同时它阻止了网络流量发送到本机（即loopback），即阻止了UWP应用访问 localhost。没有访问回环地址的权限，也意味着即便系统设置中启用了本地代理，UWP应用也无法访问本地代理服务器。</p>
+<p>按照官方的解决方案，貌似可以用CheckNetIsolation命令来解决这个问题，MSDN轻描淡写的写着命令：</p>
+<pre><code>checknetisolation loopbackexempt -a -n= UWP应用容器名
+
+checknetisolation loopbackexempt -a -p= UWP应用SID
+</code></pre>
+<p>可是谁告诉我UWP的SID去哪里找？UWP的应用容器名称又是啥？</p>
+<p>有一种找SID的方法，通过注册表获取：</p>
+<p>win+r的运行里输入Regedit打开注册表编辑器，然后定位到</p>
+<pre><code>HKEY_CURRENT_USERSoftwareClassesLocal 
+Settings
+Software
+MicrosoftWindows
+CurrentVersion
+App
+Container
+Mappings 
+</code></pre>
+<p>接着在左边的注册表项中找到你想解除网络隔离的应用，右边的 DisplayName 就是应用名称，而左边那一大串字符就是应用的SID值了。<br>
+SID值是人类可以理解的么？对此我可以骂人么？这是人干的事？我不能骂人么？那我还有什么话好说。</p>
+<p>这方法还是放弃的好！</p>
+<p>官方的解决方案如此复杂，按照问题发生后最简单的思路去解决，那就是关闭代理。</p>
+<p>这简单粗暴的方法确实可行，唯一的问题是关闭代理这事在国内是我不能接受的。</p>
+<p>接着搜索，互联网给出的答案是网络调试工具Fiddler，然后左上角的WinConfig按钮，排除不要的UWP应用。</p>
+<p>可是，Fiddler这工具用来干这个岂不是太大材小用了？</p>
+<p>最终，我找到了这个——<strong>Windows-Loopback-Exemption-Manager</strong></p>
+<p>Github上的项目，看来遭这问题困扰的人好多啊</p>
+<p><a href="https://github.com/tiagonmas/Windows-Loopback-Exemption-Manager">https://github.com/tiagonmas/Windows-Loopback-Exemption-Manager</a></p>
+<p>好了，这玩意跟Fiddler用法差不多，功能更单一，仅此而已。</p>
+<p>哦，这东西还有一个坑，就是邮件，用这种方法邮件还是没办法添加Gmail不知道是为啥。</p>
+<p>以上就是三种解决方案，其实只能算两种:<br>
+如<strong>果想简单粗暴</strong>，那么关闭代理是最直接的,这简直不能算解决方案；<br>
+不然，<strong>就Fiddle或是Windows-Loopback-Exemption-Manager</strong>这两者虽然有坑都还可以接受；<br>
+我想是没有人愿意手动去一条条命令敲下来的吧，毕竟光是找SID的工作就是非人类的。</p>
 </span></p></div><div id = "warn"></div>
 	<br>
 	<hr>
@@ -251,16 +287,16 @@ function change(){
 
 <div style="width:100%;overflow:hidden">
 
-
-
-          <div style="float:left;text-align:left;color:#ccc;font-size:18px;width:50%;">
-            Previous
-            <a href="https://suika.rumia.ml/post/created-slice-andampamp-starting-session/">
+          <div style="float:right;text-align:right;color:#ccc;font-size:18px;width:50%;">
+            Next
+            <a href="https://suika.rumia.ml/post/arch-linux-install/">
               <p class="post-title">
-                <b>Created slice &amp;amp;amp; Starting Session</b>
+                <b>安装Arch Linux</b>
               </p>
             </a>
           </div>
+
+
 
 </div>
 <div class="doc_comments">
@@ -304,7 +340,7 @@ imgList.forEach(img => {
   div1.appendChild(figuration)}
 })
 $('img').on('error',function(){$(this).prop('src','https://suika.rumia.ml/media/images/broken.jpg')});$(".md_block a").attr("rel","external nofollow");$("a[rel='external nofollow']").attr("target","_blank");$("a[href^='#']").removeAttr("target");$("a.ex").removeAttr("rel");$("a.ex").removeAttr("target");
-content="<div class='warn'>本文最后更新于2020-02-20，已超过 1 年没有更新，涉及的内容可能已经失效！</div>";var date1="2020-02-20 16:30:43";date1=date1.replace("-","/");var date2=new Date();var date3=date2.getTime()-new Date(date1).getTime();var days=Math.floor(date3/(24*3600*1000));if(days>=365){document.getElementById("warn").innerHTML=content};
+content="<div class='warn'>本文最后更新于2020-03-12，已超过 1 年没有更新，涉及的内容可能已经失效！</div>";var date1="2020-03-12 14:07:17";date1=date1.replace("-","/");var date2=new Date();var date3=date2.getTime()-new Date(date1).getTime();var days=Math.floor(date3/(24*3600*1000));if(days>=365){document.getElementById("warn").innerHTML=content};
 $('#pjax-container').lightGallery({
     selector: '.back'
 });
