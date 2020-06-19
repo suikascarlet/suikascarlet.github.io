@@ -206,7 +206,7 @@ function change(){
 </span>
 <i class="fa fa-anchor"></i>
 <span style="margin-right:15px">
-397字
+462字
 </span>
 <i class="fa fa-clock-o"></i>
 <span style="margin-right:15px">
@@ -237,7 +237,8 @@ https://access.redhat.com/documentation/en-us/red_hat_hyperconverged_infrastruct
 第二篇文档要注意的是nfs的权限设置，不是随便哪个nfs都能在rhv环境中挂起来的。<br>
 然后，按照文档部署完成之后要在compute-&gt;cluster里把enable gluster service的勾勾上，不然在storage-&gt;volumes里管理不到先前创建的gluster卷。<br>
 <img src="https://suika.rumia.ml/post-images/1592294025923.png" alt="" loading="lazy"></p>
-<p>最后，就可以慢慢用了，从rhv2到3再到如今的4.3，改变还是蛮大的，也明显越来越好用了，虽然不是主流产品但是有超融合需求的还可以尝试一下，毕竟有免费的开源版本ovirt</p>
+<p>最后，就可以慢慢用了，从rhv2到3再到如今的4.3，改变还是蛮大的，也明显越来越好用了，虽然不是主流产品但是有超融合需求的还可以尝试一下，毕竟有免费的开源版本ovirt。<br>
+但是4.3的RHV有个最坑的地方，由于宿主机是基于RHEL7的系统，因此无法将RHEL8的系统做成模板，以为rhel8中xfs有新特性，而这点居然写在了RHV4.4的文档里，而不是4.3的……</p>
 </span></p></div><div id = "warn"></div>
 	<br>
 	<hr>
@@ -272,6 +273,15 @@ https://access.redhat.com/documentation/en-us/red_hat_hyperconverged_infrastruct
           </div>
 
 
+
+          <div style="float:left;text-align:left;color:#ccc;font-size:18px;width:50%;">
+            Previous
+            <a href="https://suika.rumia.ml/post/convert-image/">
+              <p class="post-title">
+                <b>虚拟机镜像转换</b>
+              </p>
+            </a>
+          </div>
 
 </div>
 <div class="doc_comments">
