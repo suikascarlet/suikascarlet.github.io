@@ -9,7 +9,7 @@
 <meta name="description" content="绝圣弃智，大盗乃止">
 <meta http-equiv="Access-Control-Allow-Origin" content="*">
 
-<title>虚拟机镜像转换 | すいかの幻想郷</title>
+<title>封装虚拟机 | すいかの幻想郷</title>
 <link href="https://suika.rumia.ml/styles/main.css" type="text/css" rel="stylesheet"/>
 <link rel="stylesheet" href="//cdn.bootcss.com/KaTeX/0.10.2/katex.min.css"/>
 <script src="//cdn.bootcss.com/KaTeX/0.10.2/katex.min.js"></script>
@@ -150,7 +150,7 @@ var r = 0;
 <div class="post_page" >
 <div class="post">
   <div class="post_title sm_margin">
-    <h2><a>虚拟机镜像转换</a>
+    <h2><a>封装虚拟机</a>
     </h2>
   </div>
 <script>
@@ -193,7 +193,7 @@ function change(){
   <div class="post_details">
     <div class="round-shape-one" ></div>
     <div class="info"><i class="fa fa-calendar"></i>
-<span class="date_info">2020-05-08</span>
+<span class="date_info">2020-05-12</span>
 <i class="fa fa-eye"></i>
 <span class="date_info"><span id="busuanzi_value_page_pv"></span> Views</span>
 <i class="fa fa-bookmark-o"></i>
@@ -204,7 +204,7 @@ function change(){
 </span>
 <i class="fa fa-anchor"></i>
 <span style="margin-right:15px">
-271字
+259字
 </span>
 <i class="fa fa-clock-o"></i>
 <span style="margin-right:15px">
@@ -224,26 +224,36 @@ function change(){
     <div class="post_content markdown">
 	
     <div name="show" id="show">
-	<p class="md_block"><span class="md_line md_line_start md_line_end"><p>总会遇到诡异的问题，比如总要部署厂家打包好的定制化的镜像，然后就发现这镜像只提供一种平台的格式，这时候就需要将虚拟磁盘做转换了。<br>
-各个厂家提供一些定制化的工具并不是太通用，比如vmware的vmware-vdiskmanager，好在这个世界有开源的qemu-img工具，可以方便的转换各种格式的镜像。</p>
-<h2 id="安装">安装：</h2>
-<p>qemu-img提供多平台支持，常见的windows可以从<a href="https://qemu.weilnetz.de/">官网</a>下载安装；linux就更简单了，配源然后install，比如：<code>yum install qemu-img</code></p>
-<h2 id="参数">参数：</h2>
-<p>常用的转换参数如下：<br>
-convert：转换操作；<br>
--p：显示转换进度;<br>
--f xxx：指明被转换镜像的格式，可以留空，但hyperV的vhd最好写明vpc否则可能不识别；<br>
--O xxx：表明要转换成的格式；<br>
-info：查询信息</p>
-<h2 id="实例">实例：</h2>
-<p>vmdk转qcow2：</p>
-<pre><code>qemu-img convert -p -f vmdk -O qcow2 RHEL.vmdk RHEL.qcow2
+	<p class="md_block"><span class="md_line md_line_start md_line_end"><p>很多时候我们需要重复创建虚机，模板就是方便此类重复操作的一个虚机副本。模板不能拥有任何特定的信息，否则依此建立的虚机将都带有特定信息。所以，在建立模板前需要对源虚机进行封装，所谓封装就是在保证其他功能正常的同时，去除掉特点的功能。<br>
+以前linux通用的封装方式比较烦，需要手动删除如下：</p>
+<ol>
+<li>ssh主机密钥：</li>
+</ol>
+<pre><code>rm -rf /etc/ssh/ssh_host_*
 </code></pre>
-<p>查询镜像详细信息：</p>
-<pre><code>qemu-img info RHEL.qcow2
+<ol>
+<li>设置hostname为localhost</li>
+</ol>
+<pre><code>cat /etc/sysconfig/network
+HOSTNAME=localhost.localdomain
 </code></pre>
-<p>如果转vhd文件，注意<code>-f</code>后跟<code>vpc</code>而不是<code>vhd</code></p>
-<p>以上没有了……</p>
+<ol start="3">
+<li>从/var/log中删除所有日志：</li>
+</ol>
+<pre><code>for i in `find .-name &quot;*.log&quot;`;do cat /dev/null&gt;$i;done
+</code></pre>
+<ol start="5">
+<li>/root中删除build日志：</li>
+<li>关闭虚机</li>
+</ol>
+<p><strong>现在rhel提供了更简便的封装方法：</strong></p>
+<pre><code>yum install -y libguestfs-tools
+virt-sysprep
+</code></pre>
+<p><strong>windows的封装一向很简单：</strong><br>
+运行sysprep.exe<br>
+一般在C:\Windows\System32\sysprep\sysprep.exe</p>
+<p>此类是通用的封装方法，有虚拟化平台提供自己的封装工具，那么以平台为准。</p>
 </span></p></div><div id = "warn"></div>
 	<br>
 	<hr>
@@ -270,23 +280,14 @@ info：查询信息</p>
 
           <div style="float:right;text-align:right;color:#ccc;font-size:18px;width:50%;">
             Next
-            <a href="https://suika.rumia.ml/post/RHHI/">
+            <a href="https://suika.rumia.ml/post/convert-image/">
               <p class="post-title">
-                <b>部署RHHI环境</b>
+                <b>虚拟机镜像转换</b>
               </p>
             </a>
           </div>
 
 
-
-          <div style="float:left;text-align:left;color:#ccc;font-size:18px;width:50%;">
-            Previous
-            <a href="https://suika.rumia.ml/post/template/">
-              <p class="post-title">
-                <b>封装虚拟机</b>
-              </p>
-            </a>
-          </div>
 
 </div>
 <div class="doc_comments">
@@ -330,7 +331,7 @@ imgList.forEach(img => {
   div1.appendChild(figuration)}
 })
 $('img').on('error',function(){$(this).prop('src','https://suika.rumia.ml/media/images/broken.jpg')});$(".md_block a").attr("rel","external nofollow");$("a[rel='external nofollow']").attr("target","_blank");$("a[href^='#']").removeAttr("target");$("a.ex").removeAttr("rel");$("a.ex").removeAttr("target");
-content="<div class='warn'>本文最后更新于2020-05-08，已超过 1 年没有更新，涉及的内容可能已经失效！</div>";var date1="2020-05-08 11:00:23";date1=date1.replace("-","/");var date2=new Date();var date3=date2.getTime()-new Date(date1).getTime();var days=Math.floor(date3/(24*3600*1000));if(days>=365){document.getElementById("warn").innerHTML=content};
+content="<div class='warn'>本文最后更新于2020-05-12，已超过 1 年没有更新，涉及的内容可能已经失效！</div>";var date1="2020-05-12 11:19:16";date1=date1.replace("-","/");var date2=new Date();var date3=date2.getTime()-new Date(date1).getTime();var days=Math.floor(date3/(24*3600*1000));if(days>=365){document.getElementById("warn").innerHTML=content};
 $('#pjax-container').lightGallery({
     selector: '.back'
 });
@@ -341,15 +342,6 @@ $('#pjax-container').lightGallery({
 
       </div>
 <div class="toc">
-<ul class="markdownIt-TOC">
-<li>
-<ul>
-<li><a href="#%E5%AE%89%E8%A3%85">安装：</a></li>
-<li><a href="#%E5%8F%82%E6%95%B0">参数：</a></li>
-<li><a href="#%E5%AE%9E%E4%BE%8B">实例：</a></li>
-</ul>
-</li>
-</ul>
 
 </div>
     </div>
