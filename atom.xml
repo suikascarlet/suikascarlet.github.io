@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://suika.rumia.ml</id>
     <title>すいかの幻想郷</title>
-    <updated>2020-06-20T06:38:41.218Z</updated>
+    <updated>2020-07-16T07:46:25.518Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://suika.rumia.ml"/>
     <link rel="self" href="https://suika.rumia.ml/atom.xml"/>
@@ -10,6 +10,34 @@
     <logo>https://suika.rumia.ml/images/avatar.png</logo>
     <icon>https://suika.rumia.ml/favicon.ico</icon>
     <rights>All rights reserved 2020, すいかの幻想郷</rights>
+    <entry>
+        <title type="html"><![CDATA[Windows共享目录给linux]]></title>
+        <id>https://suika.rumia.ml/post/windows-share-for-linux/</id>
+        <link href="https://suika.rumia.ml/post/windows-share-for-linux/">
+        </link>
+        <updated>2020-07-13T05:50:07.000Z</updated>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Ubuntu删除snap]]></title>
+        <id>https://suika.rumia.ml/post/ubuntu-delete-snap/</id>
+        <link href="https://suika.rumia.ml/post/ubuntu-delete-snap/">
+        </link>
+        <updated>2020-07-07T01:25:12.000Z</updated>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[香港……]]></title>
+        <id>https://suika.rumia.ml/post/Hongkong/</id>
+        <link href="https://suika.rumia.ml/post/Hongkong/">
+        </link>
+        <updated>2020-06-30T07:26:10.000Z</updated>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[CEPH规划]]></title>
+        <id>https://suika.rumia.ml/post/ceph-architecture/</id>
+        <link href="https://suika.rumia.ml/post/ceph-architecture/">
+        </link>
+        <updated>2020-05-20T07:16:05.000Z</updated>
+    </entry>
     <entry>
         <title type="html"><![CDATA[封装虚拟机]]></title>
         <id>https://suika.rumia.ml/post/template/</id>
@@ -51,33 +79,5 @@
         <link href="https://suika.rumia.ml/post/caddy/">
         </link>
         <updated>2020-04-06T02:09:28.000Z</updated>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[Python 更改pip源]]></title>
-        <id>https://suika.rumia.ml/post/pip/</id>
-        <link href="https://suika.rumia.ml/post/pip/">
-        </link>
-        <updated>2020-03-25T02:08:05.000Z</updated>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[Vim替换]]></title>
-        <id>https://suika.rumia.ml/post/vim-s/</id>
-        <link href="https://suika.rumia.ml/post/vim-s/">
-        </link>
-        <updated>2020-03-20T02:05:31.000Z</updated>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[tar.xz解压]]></title>
-        <id>https://suika.rumia.ml/post/tarxz/</id>
-        <link href="https://suika.rumia.ml/post/tarxz/">
-        </link>
-        <updated>2020-03-16T03:08:56.000Z</updated>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[解决UWP应用无法联网的三种方法]]></title>
-        <id>https://suika.rumia.ml/post/uwp-no-internet/</id>
-        <link href="https://suika.rumia.ml/post/uwp-no-internet/">
-        </link>
-        <updated>2020-03-12T06:07:17.000Z</updated>
     </entry>
 </feed>

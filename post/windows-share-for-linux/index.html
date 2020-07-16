@@ -9,7 +9,7 @@
 <meta name="description" content="绝圣弃智，大盗乃止">
 <meta http-equiv="Access-Control-Allow-Origin" content="*">
 
-<title>Caddy翻墙 | すいかの幻想郷</title>
+<title>Windows共享目录给linux | すいかの幻想郷</title>
 <link href="https://suika.rumia.ml/styles/main.css" type="text/css" rel="stylesheet"/>
 <link rel="stylesheet" href="//cdn.bootcss.com/KaTeX/0.10.2/katex.min.css"/>
 <script src="//cdn.bootcss.com/KaTeX/0.10.2/katex.min.js"></script>
@@ -150,7 +150,7 @@ var r = 0;
 <div class="post_page" >
 <div class="post">
   <div class="post_title sm_margin">
-    <h2><a>Caddy翻墙</a>
+    <h2><a>Windows共享目录给linux</a>
     </h2>
   </div>
 <script>
@@ -193,24 +193,20 @@ function change(){
   <div class="post_details">
     <div class="round-shape-one" ></div>
     <div class="info"><i class="fa fa-calendar"></i>
-<span class="date_info">2020-04-06</span>
+<span class="date_info">2020-07-13</span>
 <i class="fa fa-eye"></i>
 <span class="date_info"><span id="busuanzi_value_page_pv"></span> Views</span>
 <i class="fa fa-bookmark-o"></i>
 <span class="tags_info weaklink">
 	
-	<a href="https://suika.rumia.ml/tag/ksmPLEfRv/" class="tag">caddy</a>
-
-	<a href="https://suika.rumia.ml/tag/OlW70dbe0O/" class="tag">GFW</a>
-
 </span>
 <i class="fa fa-anchor"></i>
 <span style="margin-right:15px">
-1010字
+286字
 </span>
 <i class="fa fa-clock-o"></i>
 <span style="margin-right:15px">
-6 min read
+2 min read
 </span>
 <span style="margin-right:15px">
 </span>
@@ -226,166 +222,36 @@ function change(){
     <div class="post_content markdown">
 	
     <div name="show" id="show">
-	<p class="md_block"><span class="md_line md_line_start md_line_end"><p>Caddy有个模块很好用，经过简单的配置即可以https或http2的方式跨越防火墙，不需要单独申请证书同时还有正常网站做伪装，配合浏览器switch omega插件，方便快捷的访问被墙的资源。</p>
-<h2 id="安装">安装：</h2>
-<pre><code>curl https://getcaddy.com | bash -s personal http.forwardproxy
+	<p class="md_block"><span class="md_line md_line_start md_line_end"><p>莫名其妙的曾经能用的mount cifs的方式开始报错</p>
+<pre><code>mount error(112): Host is down
+Refer to the mount.cifs(8) manual page (e.g. man mount.cifs)
 </code></pre>
-<h2 id="配置一个正常网站">配置一个正常网站：</h2>
-<p>创建文件并赋权等杂项：</p>
-<pre><code>setcap 'cap_net_bind_service=+ep' /usr/local/bin/caddy
-useradd -r -d /var/www -M -s /sbin/nologin caddy
-chown -R caddy:caddy /var/www
-mkdir /etc/caddy
-chown -R root:caddy /etc/caddy
-touch /etc/caddy/Caddyfile
-chown caddy:caddy /etc/caddy/Caddyfile
-mkdir /var/log/caddy
-chown caddy:caddy /var/log/caddy/
-mkdir -p /var/www/xxx.yyy.zzz
-chown -R caddy:caddy /var/www
-mkdir -p /etc/ssl/caddy
-chown -R caddy:caddy /etc/ssl/caddy
+<p>查了一下原因是smb协议版本问题，RHEL5和6最高支持SMB 1.0协议，RHEL7.2以后支持到SMB3。<br>
+所以，RHEL5和6就不要想挂载最新的windows共享了，windows目前关闭了smb1，RHEL7如果想访问windows共享的话，则需要指定一下版本。</p>
+<pre><code>mount -t cifs -o vers=2.0,username=&lt;win_share_user&gt;,password=&lt;win_share_password&gt; //WIN_SHARE_IP/&lt;share_name&gt; /mnt/win_share
 </code></pre>
-<p>编辑配置文件：<br>
-vim /etc/caddy/Caddyfile</p>
-<pre><code>https://xxx.yyy.zzz {           //xxx.yyy.zzz为可以解析到本机的域名，下同
-    log /var/log/caddy/xxx.log
-    errors /var/log/caddy/xxx.error
-    root /var/www/xxx.yyy.zzz
-    gzip
- 
-    tls &lt;xxx@xxxxx.xxx&gt; {        //随便一个邮箱
-        ciphers ECDHE-ECDSA-WITH-CHACHA20-POLY1305 ECDHE-ECDSA-AES256-GCM-SHA384 ECDHE-ECDSA-AES256-CBC-SHA
-        curves p384
-        key_type p384
-    }
-
-    header / {
-        Strict-Transport-Security &quot;max-age=31536000;&quot;
-        X-XSS-Protection &quot;1; mode=block&quot;
-        X-Content-Type-Options &quot;nosniff&quot;
-        X-Frame-Options &quot;DENY&quot;
-    }
-}
+<p>如果是域用户，则加domain信息：</p>
+<pre><code>mount -t cifs -o vers=2.0,username=&lt;win_share_user&gt;,domain=&lt;win_domain&gt;，password=&lt;win_share_password&gt; //WIN_SHARE_IP/&lt;share_name&gt; /mnt/win_share
 </code></pre>
-<p>编辑一个简单的网页：<br>
-vim /var/www/xxx.yyy.zzz/index.html</p>
-<pre><code>&lt;!DOCTYPE html&gt;
-&lt;html&gt;
-  &lt;head&gt;
-      &lt;title&gt;Hello from Caddy!&lt;/title&gt;
-  &lt;/head&gt;
-  &lt;body&gt;
-      &lt;h1 style=&quot;font-family: sans-serif&quot;&gt;This page is being served via Caddy!!!&lt;/h1&gt;
-  &lt;/body&gt;
-&lt;/html&gt;
+<p>或者更安全一点的做法，建个文件储存用户名和密码：</p>
+<pre><code># cat /etc/win-credentials
+username = user
+password = password
+domain = domain
 
+设置权限：
+chown root: /etc/win-credentials
+chmod 600 /etc/win-credentials
+
+挂载：
+mount -t cifs -o credentials=/etc/win-credentials //WIN_SHARE_IP/&lt;share_name&gt; /mnt/win_share
 </code></pre>
-<p>测试是否可以正常建立网站：</p>
-<pre><code>caddy -conf /etc/caddy/Caddyfile
-</code></pre>
-<p>按提示填写信息生成证书，如果没有报错，至此，应该可以打开一个网页，内容是加黑的This page is being served via Caddy!!!。</p>
-<h2 id="配置代理">配置代理：</h2>
-<p>在caddy的配置文件中加入forwardproxy信息，加入后内容如下：</p>
-<pre><code>https://xxx.yyy.zzz {           //xxx.yyy.zzz为可以解析到本机的域名，下同
-    log /var/log/caddy/xxx.log
-    errors /var/log/caddy/xxx.error
-    root /var/www/xxx.yyy.zzz
-    gzip
- 
-    tls &lt;xxx@xxxxx.xxx&gt; {        //随便一个邮箱
-        ciphers ECDHE-ECDSA-WITH-CHACHA20-POLY1305 ECDHE-ECDSA-AES256-GCM-SHA384 ECDHE-ECDSA-AES256-CBC-SHA
-        curves p384
-        key_type p384
-    }
+<p>也可以把信息写入/etc/fstab来实现自动挂载：</p>
+<pre><code># cat /etc/fstab
+# &lt;file system&gt;             &lt;dir&gt;          &lt;type&gt; &lt;options&gt;                                                   &lt;dump&gt;  &lt;pass&gt;
+//WIN_SHARE_IP/share_name  /mnt/win_share  cifs  credentials=/etc/win-credentials,file_mode=0755,dir_mode=0755 0       0
 
-    forwardproxy {
-	basicauth xxx yyy      //xxx yyy为用户及密码
-	hide_ip
-	hide_via
-	probe_resistance caddyserver.com
-    }
-
-    header / {
-        Strict-Transport-Security &quot;max-age=31536000;&quot;
-        X-XSS-Protection &quot;1; mode=block&quot;
-        X-Content-Type-Options &quot;nosniff&quot;
-        X-Frame-Options &quot;DENY&quot;
-    }
-}
-</code></pre>
-<p>其中probe_resistance可以隐藏代理类型，是个实验功能，可加可不加</p>
-<h2 id="ln证书">ln证书：</h2>
-<p>caddy默认生成的证书在/root/.caddy下，ln它到/etc/ssl/caddy</p>
-<pre><code>ln /root/.caddy/acme/acme-v02.api.letsencrypt.org/sites/xxx.yyy.zzz/xxx.yyy.zzz.key /etc/ssl/caddy/
-ln /root/.caddy/acme/acme-v02.api.letsencrypt.org/sites/xxx.yyy.zzz/xxx.yyy.zzz.crt /etc/ssl/caddy/
-</code></pre>
-<h2 id="日志权限">日志权限：</h2>
-<pre><code>chown caddy:caddy /var/log/caddy/*
-</code></pre>
-<h2 id="管理服务">管理服务：</h2>
-<p>配置systemd管理：<br>
-vim /etc/systemd/system/caddy.service</p>
-<pre><code>[Unit]
-Description=Caddy HTTP/2 web server
-Documentation=https://caddyserver.com/docs
-After=network-online.target
-Wants=network-online.target systemd-networkd-wait-online.service
-
-[Service]
-Restart=on-abnormal
-
-; User and group the process will run as.
-User=caddy
-Group=caddy
-
-; Letsencrypt-issued certificates will be written to this directory.
-Environment=CADDYPATH=/etc/ssl/caddy
-
-; Always set &quot;-root&quot; to something safe in case it gets forgotten in the Caddyfile.
-ExecStart=/usr/local/bin/caddy -log stdout -agree=true -conf=/etc/caddy/Caddyfile -root=/var/tmp
-ExecReload=/bin/kill -USR1 $MAINPID
-
-; Use graceful shutdown with a reasonable timeout
-KillMode=mixed
-KillSignal=SIGQUIT
-TimeoutStopSec=5s
-
-; Limit the number of file descriptors; see `man systemd.exec` for more limit settings.
-LimitNOFILE=1048576
-; Unmodified caddy is not expected to use more than that.
-LimitNPROC=512
-
-; Use private /tmp and /var/tmp, which are discarded after caddy stops.
-PrivateTmp=true
-; Use a minimal /dev
-PrivateDevices=true
-; Hide /home, /root, and /run/user. Nobody will steal your SSH-keys.
-ProtectHome=true
-; Make /usr, /boot, /etc and possibly some more folders read-only.
-ProtectSystem=full
-; … except /etc/ssl/caddy, because we want Letsencrypt-certificates there.
-;   This merely retains r/w access rights, it does not add any new. Must still be writable on the host!
-ReadWriteDirectories=/etc/ssl/caddy
-
-; The following additional security directives only work with systemd v229 or later.
-; They further retrict privileges that can be gained by caddy. Uncomment if you like.
-; Note that you may have to add capabilities required by any plugins in use.
-CapabilityBoundingSet=CAP_NET_BIND_SERVICE
-AmbientCapabilities=CAP_NET_BIND_SERVICE
-NoNewPrivileges=true
-
-[Install]
-WantedBy=multi-user.target
-
-</code></pre>
-<p>至此，可以通过systemd统一管理caddy服务：</p>
-<pre><code>systemctl status caddy.service -l
-</code></pre>
-<h2 id="配置客户端">配置客户端：</h2>
-<p>PC端firefox及chrome可以安装Switch Omega，然后添加一个https代理即可，注意添加用户名和密码否则每次都要输<br>
-IOS端可以shadowrocket，配置http2代理和https代理均可<br>
-然后，然后就没有然后了……</p>
+mount /mnt/win_share</code></pre>
 </span></p></div><div id = "warn"></div>
 	<br>
 	<hr>
@@ -412,23 +278,14 @@ IOS端可以shadowrocket，配置http2代理和https代理均可<br>
 
           <div style="float:right;text-align:right;color:#ccc;font-size:18px;width:50%;">
             Next
-            <a href="https://suika.rumia.ml/post/pip/">
+            <a href="https://suika.rumia.ml/post/ubuntu-delete-snap/">
               <p class="post-title">
-                <b>Python 更改pip源</b>
+                <b>Ubuntu删除snap</b>
               </p>
             </a>
           </div>
 
 
-
-          <div style="float:left;text-align:left;color:#ccc;font-size:18px;width:50%;">
-            Previous
-            <a href="https://suika.rumia.ml/post/pvmove/">
-              <p class="post-title">
-                <b>pvmove迁移数据</b>
-              </p>
-            </a>
-          </div>
 
 </div>
 <div class="doc_comments">
@@ -472,7 +329,7 @@ imgList.forEach(img => {
   div1.appendChild(figuration)}
 })
 $('img').on('error',function(){$(this).prop('src','https://suika.rumia.ml/media/images/broken.jpg')});$(".md_block a").attr("rel","external nofollow");$("a[rel='external nofollow']").attr("target","_blank");$("a[href^='#']").removeAttr("target");$("a.ex").removeAttr("rel");$("a.ex").removeAttr("target");
-content="<div class='warn'>本文最后更新于2020-04-06，已超过 1 年没有更新，涉及的内容可能已经失效！</div>";var date1="2020-04-06 10:09:28";date1=date1.replace("-","/");var date2=new Date();var date3=date2.getTime()-new Date(date1).getTime();var days=Math.floor(date3/(24*3600*1000));if(days>=365){document.getElementById("warn").innerHTML=content};
+content="<div class='warn'>本文最后更新于2020-07-13，已超过 1 年没有更新，涉及的内容可能已经失效！</div>";var date1="2020-07-13 13:50:07";date1=date1.replace("-","/");var date2=new Date();var date3=date2.getTime()-new Date(date1).getTime();var days=Math.floor(date3/(24*3600*1000));if(days>=365){document.getElementById("warn").innerHTML=content};
 $('#pjax-container').lightGallery({
     selector: '.back'
 });
@@ -483,19 +340,6 @@ $('#pjax-container').lightGallery({
 
       </div>
 <div class="toc">
-<ul class="markdownIt-TOC">
-<li>
-<ul>
-<li><a href="#%E5%AE%89%E8%A3%85">安装：</a></li>
-<li><a href="#%E9%85%8D%E7%BD%AE%E4%B8%80%E4%B8%AA%E6%AD%A3%E5%B8%B8%E7%BD%91%E7%AB%99">配置一个正常网站：</a></li>
-<li><a href="#%E9%85%8D%E7%BD%AE%E4%BB%A3%E7%90%86">配置代理：</a></li>
-<li><a href="#ln%E8%AF%81%E4%B9%A6">ln证书：</a></li>
-<li><a href="#%E6%97%A5%E5%BF%97%E6%9D%83%E9%99%90">日志权限：</a></li>
-<li><a href="#%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8A%A1">管理服务：</a></li>
-<li><a href="#%E9%85%8D%E7%BD%AE%E5%AE%A2%E6%88%B7%E7%AB%AF">配置客户端：</a></li>
-</ul>
-</li>
-</ul>
 
 </div>
     </div>
