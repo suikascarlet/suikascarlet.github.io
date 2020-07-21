@@ -9,7 +9,7 @@
 <meta name="description" content="绝圣弃智，大盗乃止">
 <meta http-equiv="Access-Control-Allow-Origin" content="*">
 
-<title>CEPH规划 | すいかの幻想郷</title>
+<title>RHEL挂载windows共享 | すいかの幻想郷</title>
 <link href="https://suika.rumia.ml/styles/main.css" type="text/css" rel="stylesheet"/>
 <link rel="stylesheet" href="//cdn.bootcss.com/KaTeX/0.10.2/katex.min.css"/>
 <script src="//cdn.bootcss.com/KaTeX/0.10.2/katex.min.js"></script>
@@ -150,7 +150,7 @@ var r = 0;
 <div class="post_page" >
 <div class="post">
   <div class="post_title sm_margin">
-    <h2><a>CEPH规划</a>
+    <h2><a>RHEL挂载windows共享</a>
     </h2>
   </div>
 <script>
@@ -193,22 +193,20 @@ function change(){
   <div class="post_details">
     <div class="round-shape-one" ></div>
     <div class="info"><i class="fa fa-calendar"></i>
-<span class="date_info">2020-05-20</span>
+<span class="date_info">2020-07-13</span>
 <i class="fa fa-eye"></i>
 <span class="date_info"><span id="busuanzi_value_page_pv"></span> Views</span>
 <i class="fa fa-bookmark-o"></i>
 <span class="tags_info weaklink">
 	
-	<a href="https://suika.rumia.ml/tag/IWsePOxfV/" class="tag">CEPH</a>
-
 </span>
 <i class="fa fa-anchor"></i>
 <span style="margin-right:15px">
-898字
+286字
 </span>
 <i class="fa fa-clock-o"></i>
 <span style="margin-right:15px">
-4 min read
+2 min read
 </span>
 <span style="margin-right:15px">
 </span>
@@ -224,187 +222,36 @@ function change(){
     <div class="post_content markdown">
 	
     <div name="show" id="show">
-	<p class="md_block"><span class="md_line md_line_start md_line_end"><h2 id="背景">背景</h2>
-<p>终于准备用nautilus做生产环境了，目前，Ceph 主要有三种企业级应用场景：</p>
-<ul>
-<li>IOPS 密集型：这种类型的场景通常是支撑在虚拟化/私有云上运行数据库。如在 OpenStack 上运行 Mysql、MariaDB 或 PostgreSQL 等。IOPS 密集型场景对磁盘的性能要求较高，最好使用全闪架构。如果使用混合架构，机械盘转速需要 1.2 万，并使用高速盘存储频繁写操作的日志或元数据。</li>
-<li>高吞吐量型：这种类型的应用场景主要是大块数据传输，如图像、视频、音频文件等。高吞吐量型磁盘的要求没有 IOPS 密集型高，但需要配置较高的网络。同时也需要配置 SSD 来处理写日志。</li>
-<li>高容量型：这种场景主要用于存储归档、离线数据。它对磁盘的容量要求高，对性能无过多要求。写日志也可以存储在 HDD 上。<br>
-此次计划部署一套带宽型的用来提供S3服务，所以部署第二种就好。</li>
-</ul>
-<h2 id="硬件规划">硬件规划：</h2>
-<p>nautilus采用blustore比filestore的性能大大提升，毕竟传输路径短了很多：<br>
-<img src="https://suika.rumia.ml/post-images/1594881842550.png" alt="" loading="lazy"><br>
-随之而来的问题是BlueStore 存储引擎的实现，需要存储数据和元数据。目前 Ceph BuleStore 的元数据存储在 RocksDB（K-V 数据库）中。通过为 RocksEnv 提供操作接口，RocksDB 存放在 BlueFS 上。由于 BlueFS 最终通过 RocksDB，承载的是 BlueStore 存储引擎中的元数据，因此它的性能会很大程度上影响整个 Ceph 的性能。所以，要为它提供高速硬盘。<br>
-Redhat建议，在新的bluestore架构下，如果用NVMe做metedata/jouranl，对应HDD的OSD是1：12；如果普通SSD做metedata/jouranl，则与HDD的比例为1：4 <a href="https://access.redhat.com/documentation/en-us/red_hat_ceph_storage/4/html/hardware_guide/server-and-rack-solutions_hw"><sup>1<sup></a><br>
-在此基础上，其他按照官方建议配置。</p>
-<table>
-<thead>
-<tr>
-<th style="text-align:left">Device</th>
-<th>Size</th>
-<th>Count</th>
-<th>Use</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left">CPU</td>
-<td>Inter Xeon 6252</td>
-<td>2</td>
-<td></td>
-</tr>
-<tr>
-<td style="text-align:left">Memor</td>
-<td>32GB</td>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td style="text-align:left">DISK</td>
-<td>4TB</td>
-<td>12</td>
-<td>OSD</td>
-</tr>
-<tr>
-<td style="text-align:left">SSD</td>
-<td>480GB</td>
-<td>2</td>
-<td>Operation</td>
-</tr>
-<tr>
-<td style="text-align:left">NVMe</td>
-<td>4TB</td>
-<td>2</td>
-<td>blockk.db</td>
-</tr>
-<tr>
-<td style="text-align:left">Network</td>
-<td>10GB</td>
-<td>2</td>
-<td></td>
-</tr>
-</tbody>
-</table>
-<p>以上配置保证了：<br>
-1、每HDD的OSD至少对应5GB内存；<br>
-2、每2 GHZ CPU每0.5 Cores每HDD；<br>
-3、前端网络和后端网络的带宽；<br>
-4、SSD组成raid1保证操作系统安全；<br>
-5、NVMe通过PCIE组成raid1，简化db磁盘损坏后的更换（此处不符合官方最佳实践）<br>
-共6台这样硬件配置的服务器，每台的作用如下：</p>
-<table>
-<thead>
-<tr>
-<th>hostname</th>
-<th>IP addr</th>
-<th>Roles</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>rhcs01-st</td>
-<td>10.64.0.80 <br />10.64.4.80</td>
-<td>OSD <br />MON<br />MGR</td>
-</tr>
-<tr>
-<td>rhcs02-st</td>
-<td>10.64.0.81 <br />10.64.4.81</td>
-<td>OSD <br />RGW<br />MDS</td>
-</tr>
-<tr>
-<td>rhcs03-st</td>
-<td>10.64.0.82 <br />10.64.4.82</td>
-<td>OSD <br />MON<br />MGR</td>
-</tr>
-<tr>
-<td>rhcs04-st</td>
-<td>10.64.0.83 <br />10.64.4.83</td>
-<td>OSD <br />RGW<br />MDS</td>
-</tr>
-<tr>
-<td>rhcs05-st</td>
-<td>10.64.0.84 <br />10.64.4.84</td>
-<td>OSD <br />MON<br />MGR</td>
-</tr>
-<tr>
-<td>rhcs06-st</td>
-<td>10.64.0.85 <br />10.64.4.86</td>
-<td>OSD <br />RGW<br />MDS</td>
-</tr>
-</tbody>
-</table>
-<h2 id="软件计划">软件计划：</h2>
-<p>确定使用RHCS4.1来部署，其与开源版本对应关系如下：</p>
-<table>
-<thead>
-<tr>
-<th style="text-align:left">Vendor</th>
-<th>Version</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left">Redhat Enterprise Linux</td>
-<td>8.2<br />8.1</td>
-</tr>
-<tr>
-<td style="text-align:left">Redhat Enterprise Linux</td>
-<td>7.8<br />7.7</td>
-</tr>
-</tbody>
-</table>
-<table>
-<thead>
-<tr>
-<th>Upstream Code Name</th>
-<th>Downstream Release Name</th>
-<th>Red Hat Ceph Storage Package Version (RHEL 8.x)</th>
-<th>Red Hat Ceph Storage Package Version (RHEL 7.x)</th>
-<th>Red Hat Ceph Ansible Package Version 	Release Month</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Nautilus 	Red Hat Ceph Storage 4.1</td>
-<td>14.2.8-59.el8cp</td>
-<td>14.2.8-50.el7cp</td>
-<td>ceph-ansible-4.0.23-1</td>
-<td>June, 2020</td>
-</tr>
-<tr>
-<td>Nautilus</td>
-<td>Red Hat Ceph Storage 4.0</td>
-<td>14.2.4-125.el8cp</td>
-<td>14.2.4-51.el7cp</td>
-<td>ceph-ansible-4.0.14-1</td>
-</tr>
-</tbody>
-</table>
-<p>而RHCS4支持的操作系统如下：</p>
-<table>
-<thead>
-<tr>
-<th>Vendor</th>
-<th>Version</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Redhat Enterprise Linux</td>
-<td>8.2<br />8.1</td>
-</tr>
-<tr>
-<td>Redhat Enterprise Linux</td>
-<td>7.8<br />7.7</td>
-</tr>
-</tbody>
-</table>
-<p>因此，系统选用RHEL8.2</p>
-<h2 id="小结">小结</h2>
-<p>选定了软件版本后，按标准来配置即可。由于是分布式存储，主要还是考虑硬盘和网络，而硬盘的配置跟存储整个架构有很大关系。</p>
-<h2 id="参考文档">参考文档：</h2>
-<p>https://access.redhat.com/documentation/en-us/red_hat_ceph_storage/4/html/hardware_guide/index</p>
+	<p class="md_block"><span class="md_line md_line_start md_line_end"><p>莫名其妙的曾经能用的mount cifs的方式开始报错</p>
+<pre><code>mount error(112): Host is down
+Refer to the mount.cifs(8) manual page (e.g. man mount.cifs)
+</code></pre>
+<p>查了一下原因是smb协议版本问题，RHEL5和6最高支持SMB 1.0协议，RHEL7.2以后支持到SMB3。<br>
+所以，RHEL5和6就不要想挂载最新的windows共享了，windows目前关闭了smb1，RHEL7如果想访问windows共享的话，则需要指定一下版本。</p>
+<pre><code>mount -t cifs -o vers=2.0,username=&lt;win_share_user&gt;,password=&lt;win_share_password&gt; //WIN_SHARE_IP/&lt;share_name&gt; /mnt/win_share
+</code></pre>
+<p>如果是域用户，则加domain信息：</p>
+<pre><code>mount -t cifs -o vers=2.0,username=&lt;win_share_user&gt;,domain=&lt;win_domain&gt;，password=&lt;win_share_password&gt; //WIN_SHARE_IP/&lt;share_name&gt; /mnt/win_share
+</code></pre>
+<p>或者更安全一点的做法，建个文件储存用户名和密码：</p>
+<pre><code># cat /etc/win-credentials
+username = user
+password = password
+domain = domain
+
+设置权限：
+chown root: /etc/win-credentials
+chmod 600 /etc/win-credentials
+
+挂载：
+mount -t cifs -o credentials=/etc/win-credentials //WIN_SHARE_IP/&lt;share_name&gt; /mnt/win_share
+</code></pre>
+<p>也可以把信息写入/etc/fstab来实现自动挂载：</p>
+<pre><code># cat /etc/fstab
+# &lt;file system&gt;             &lt;dir&gt;          &lt;type&gt; &lt;options&gt;                                                   &lt;dump&gt;  &lt;pass&gt;
+//WIN_SHARE_IP/share_name  /mnt/win_share  cifs  credentials=/etc/win-credentials,file_mode=0755,dir_mode=0755 0       0
+
+mount /mnt/win_share</code></pre>
 </span></p></div><div id = "warn"></div>
 	<br>
 	<hr>
@@ -431,9 +278,9 @@ Redhat建议，在新的bluestore架构下，如果用NVMe做metedata/jouranl，
 
           <div style="float:right;text-align:right;color:#ccc;font-size:18px;width:50%;">
             Next
-            <a href="https://suika.rumia.ml/post/template/">
+            <a href="https://suika.rumia.ml/post/ubuntu-delete-snap/">
               <p class="post-title">
-                <b>封装虚拟机</b>
+                <b>Ubuntu删除snap</b>
               </p>
             </a>
           </div>
@@ -442,9 +289,9 @@ Redhat建议，在新的bluestore架构下，如果用NVMe做metedata/jouranl，
 
           <div style="float:left;text-align:left;color:#ccc;font-size:18px;width:50%;">
             Previous
-            <a href="https://suika.rumia.ml/post/Hongkong/">
+            <a href="https://suika.rumia.ml/post/set-up-proxy-for-podman/">
               <p class="post-title">
-                <b>香港……</b>
+                <b>Set up proxy for podman</b>
               </p>
             </a>
           </div>
@@ -491,7 +338,7 @@ imgList.forEach(img => {
   div1.appendChild(figuration)}
 })
 $('img').on('error',function(){$(this).prop('src','https://suika.rumia.ml/media/images/broken.jpg')});$(".md_block a").attr("rel","external nofollow");$("a[rel='external nofollow']").attr("target","_blank");$("a[href^='#']").removeAttr("target");$("a.ex").removeAttr("rel");$("a.ex").removeAttr("target");
-content="<div class='warn'>本文最后更新于2020-05-20，已超过 1 年没有更新，涉及的内容可能已经失效！</div>";var date1="2020-05-20 15:16:05";date1=date1.replace("-","/");var date2=new Date();var date3=date2.getTime()-new Date(date1).getTime();var days=Math.floor(date3/(24*3600*1000));if(days>=365){document.getElementById("warn").innerHTML=content};
+content="<div class='warn'>本文最后更新于2020-07-13，已超过 1 年没有更新，涉及的内容可能已经失效！</div>";var date1="2020-07-13 13:50:07";date1=date1.replace("-","/");var date2=new Date();var date3=date2.getTime()-new Date(date1).getTime();var days=Math.floor(date3/(24*3600*1000));if(days>=365){document.getElementById("warn").innerHTML=content};
 $('#pjax-container').lightGallery({
     selector: '.back'
 });
@@ -502,17 +349,6 @@ $('#pjax-container').lightGallery({
 
       </div>
 <div class="toc">
-<ul class="markdownIt-TOC">
-<li>
-<ul>
-<li><a href="#%E8%83%8C%E6%99%AF">背景</a></li>
-<li><a href="#%E7%A1%AC%E4%BB%B6%E8%A7%84%E5%88%92">硬件规划：</a></li>
-<li><a href="#%E8%BD%AF%E4%BB%B6%E8%AE%A1%E5%88%92">软件计划：</a></li>
-<li><a href="#%E5%B0%8F%E7%BB%93">小结</a></li>
-<li><a href="#%E5%8F%82%E8%80%83%E6%96%87%E6%A1%A3">参考文档：</a></li>
-</ul>
-</li>
-</ul>
 
 </div>
     </div>

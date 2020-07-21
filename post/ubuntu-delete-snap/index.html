@@ -204,7 +204,7 @@ function change(){
 </span>
 <i class="fa fa-anchor"></i>
 <span style="margin-right:15px">
-34字
+48字
 </span>
 <i class="fa fa-clock-o"></i>
 <span style="margin-right:15px">
@@ -226,6 +226,10 @@ function change(){
     <div name="show" id="show">
 	<p class="md_block"><span class="md_line md_line_start md_line_end"><p>Snap在ubuntu里简直是病毒一样的存在，常规怎么都删不掉，然后一条命令搞定了……</p>
 <pre><code># apt autoremove --purge snapd
+</code></pre>
+<p>为了彻底一点：</p>
+<pre><code># rm -rf /var/cache/snapd
+# rm -rf ~/snap
 </code></pre>
 </span></p></div><div id = "warn"></div>
 	<br>
@@ -264,9 +268,9 @@ function change(){
 
           <div style="float:left;text-align:left;color:#ccc;font-size:18px;width:50%;">
             Previous
-            <a href="https://suika.rumia.ml/post/windows-share-for-linux/">
+            <a href="https://suika.rumia.ml/post/RHEL-mount-windows-share/">
               <p class="post-title">
-                <b>Windows共享目录给linux</b>
+                <b>RHEL挂载windows共享</b>
               </p>
             </a>
           </div>
