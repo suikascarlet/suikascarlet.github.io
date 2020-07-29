@@ -204,7 +204,7 @@ function change(){
 </span>
 <i class="fa fa-anchor"></i>
 <span style="margin-right:15px">
-898字
+905字
 </span>
 <i class="fa fa-clock-o"></i>
 <span style="margin-right:15px">
@@ -289,7 +289,7 @@ Redhat建议，在新的bluestore架构下，如果用NVMe做metedata/jouranl，
 <p>以上配置保证了：<br>
 1、每HDD的OSD至少对应5GB内存；<br>
 2、每2 GHZ CPU每0.5 Cores每HDD；<br>
-3、前端网络和后端网络的带宽；<br>
+3、前端网络和后端网络的带宽，提供每12OSD有10GB带宽；<br>
 4、SSD组成raid1保证操作系统安全；<br>
 5、NVMe通过PCIE组成raid1，简化db磁盘损坏后的更换（此处不符合官方最佳实践）<br>
 共6台这样硬件配置的服务器，每台的作用如下：</p>

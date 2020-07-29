@@ -9,7 +9,7 @@
 <meta name="description" content="绝圣弃智，大盗乃止">
 <meta http-equiv="Access-Control-Allow-Origin" content="*">
 
-<title>Set up proxy for podman | すいかの幻想郷</title>
+<title>ansible tower升级 | すいかの幻想郷</title>
 <link href="https://suika.rumia.ml/styles/main.css" type="text/css" rel="stylesheet"/>
 <link rel="stylesheet" href="//cdn.bootcss.com/KaTeX/0.10.2/katex.min.css"/>
 <script src="//cdn.bootcss.com/KaTeX/0.10.2/katex.min.js"></script>
@@ -150,7 +150,7 @@ var r = 0;
 <div class="post_page" >
 <div class="post">
   <div class="post_title sm_margin">
-    <h2><a>Set up proxy for podman</a>
+    <h2><a>ansible tower升级</a>
     </h2>
   </div>
 <script>
@@ -193,24 +193,22 @@ function change(){
   <div class="post_details">
     <div class="round-shape-one" ></div>
     <div class="info"><i class="fa fa-calendar"></i>
-<span class="date_info">2020-07-20</span>
+<span class="date_info">2020-07-27</span>
 <i class="fa fa-eye"></i>
 <span class="date_info"><span id="busuanzi_value_page_pv"></span> Views</span>
 <i class="fa fa-bookmark-o"></i>
 <span class="tags_info weaklink">
 	
-	<a href="https://suika.rumia.ml/tag/b51LBCEBb/" class="tag">Proxy</a>
-
-	<a href="https://suika.rumia.ml/tag/XO9e_lTEi0/" class="tag">Podman</a>
+	<a href="https://suika.rumia.ml/tag/grPdsMW3W/" class="tag">Ansible</a>
 
 </span>
 <i class="fa fa-anchor"></i>
 <span style="margin-right:15px">
-85字
+708字
 </span>
 <i class="fa fa-clock-o"></i>
 <span style="margin-right:15px">
-1 min read
+4 min read
 </span>
 <span style="margin-right:15px">
 </span>
@@ -226,13 +224,78 @@ function change(){
     <div class="post_content markdown">
 	
     <div name="show" id="show">
-	<p class="md_block"><span class="md_line md_line_start md_line_end"><p>背景如题，方案在/etc/profile.d/下配置，或为用户添加环境变量</p>
-<pre><code># cat /etc/profile.d/http_proxy.sh
-export HTTP_PROXY=http://192.168.0.1:8080
-export HTTPS_PROXY=http://192.168.0.1:8080
+	<p class="md_block"><span class="md_line md_line_start md_line_end"><p>Ansible Tower的版本更新的也是莫名的快，去年安装的3.5今年已经到3.7.1了，新的版本可以在线申请license，旧的license快过期了，所以就升个级吧。</p>
+<h2 id="步骤">步骤：</h2>
+<p>升级的时候不能只看升级文档，还要看新版本的support，一开始只看了升级文档，做的时候报操作系统版本不被支持，所以第一步配个较新的rhel源，然后update系统。</p>
+<pre><code># yum update -y
+# systemctl reboot 
 </code></pre>
-<p>或直接export，但前者对ansible也生效，后者只能是该终端的用户</p>
-<p>貌似都是废话，其他程序配置proxy也都一样……</p>
+<p>下载要升级的版本，并解压：</p>
+<pre><code># wget https://releases.ansible.com/ansible-tower/setup/ansible-tower-setup-3.7.1-1.tar.gz
+# tar xvzf ansible-tower-setup-3.7.1-1.tar.gz
+</code></pre>
+<p>把曾经3.5时候安装的inventory拷贝一份到3.7,注意要把老版本的rabbitmq_host有关的变量更改为routable_hostname，因为新版本移除了rabbitmq：</p>
+<pre><code># cp ansible-tower-bundle-3.5.1-1.el7/inventory ansible-tower-setup-3.7.1-1/
+# cat inventory
+[tower]
+ansible01-ap
+ansible02-ap
+[database]
+[all:vars]
+admin_password='redhat'
+
+pg_host='10.63.33.156'
+pg_port='5432'
+
+pg_database='towerdata'
+pg_username='postgres'
+pg_password='redhat'
+
+routable_username='tower'
+routable_password='redhat'
+routable_cookie=cookiemonster
+</code></pre>
+<p>因为涉及到clust所以用到了rhscl里的两个包，可以单独下下来建一个源，也可以直接陪rhscl的源，我enable了base和rhcsl两个源。<br>
+然后，在各节点上关闭服务：</p>
+<pre><code>ansible tower -m command -a &quot;ansible-tower-service stop&quot; -i inventory
+</code></pre>
+<p>拆除主备实例关系：</p>
+<pre><code># awx-manage list_instances
+[tower capacity=154]
+ansible01-ap capacity=72 version=3.5.1
+ansible02-ap capacity=72 version=3.5.1
+# awx-manage deprovision_instance --hostname=ansible02-ap
+# awx-manage list_instances
+[tower capacity=0]
+ansible01-ap capacity=0 version=3.5.1
+</code></pre>
+<p>最后就可以运行setup了：</p>
+<pre><code># ./setup -i inventory
+</code></pre>
+<p>本来以为会很顺利，可是还是有点坑，不知道为什么ansible-tower的源通过proxy之后访问特别慢，而且还是总获取到ipv6的地址。所以找了一台可以连外网的机器，做了一个本地源：</p>
+<pre><code># yum repolist
+# yumdownloader --resolve --destdir /root/ansible ansible-tower
+# createrepo -v -g /root/ansible-tower
+</code></pre>
+<p>然而，这只是把tower相关的包下载下来做了一个本地镜像，实际运行setup的时候还是去找tower的源。<br>
+尝试用下面的命令同步整个源到本地，发现速度太慢了</p>
+<pre><code># reposync -l -p -m -g --download-metadata --repoid=ansible-tower --download_path=/root/ansible-tower
+</code></pre>
+<p>于是，翻了下playbook怎么写的，改了一下设置源的地方。有两个地方可以改，改一个就好了:<br>
+1、把源改成刚刚同步的最小的那个源的名：</p>
+<pre><code>cat role/packages_el/defaults/main
+ansible_tower_repo: xxx
+ansible_tower_dependency_repo: xxx
+</code></pre>
+<p>2、把install_tower.yml里检查repo的部分去掉，要改两部分一个是ansible_tower_repo，一个是ansible_tower_dependency_repo，把相关这两个tasks注释掉就好了</p>
+<p>最后，等待setup完成就得到一个新版本的ansible tower<br>
+检查一下服务状态及实例情况，一切正常：</p>
+<pre><code># ansible-tower-service status
+# awx-manage list_instances
+</code></pre>
+<p>登录web，原来的project和inventory都在</p>
+<h2 id="参考文档">参考文档：</h2>
+<p>https://docs.ansible.com/ansible-tower/3.7.1/html/installandreference/upgrade_tower.html#ir-upgrade-existing</p>
 </span></p></div><div id = "warn"></div>
 	<br>
 	<hr>
@@ -259,23 +322,14 @@ export HTTPS_PROXY=http://192.168.0.1:8080
 
           <div style="float:right;text-align:right;color:#ccc;font-size:18px;width:50%;">
             Next
-            <a href="https://suika.rumia.ml/post/RHEL-mount-windows-share/">
+            <a href="https://suika.rumia.ml/post/set-up-proxy-for-podman/">
               <p class="post-title">
-                <b>RHEL挂载windows共享</b>
+                <b>Set up proxy for podman</b>
               </p>
             </a>
           </div>
 
 
-
-          <div style="float:left;text-align:left;color:#ccc;font-size:18px;width:50%;">
-            Previous
-            <a href="https://suika.rumia.ml/post/ansible-tower-upgrade/">
-              <p class="post-title">
-                <b>ansible tower升级</b>
-              </p>
-            </a>
-          </div>
 
 </div>
 <div class="doc_comments">
@@ -319,7 +373,7 @@ imgList.forEach(img => {
   div1.appendChild(figuration)}
 })
 $('img').on('error',function(){$(this).prop('src','https://suika.rumia.ml/media/images/broken.jpg')});$(".md_block a").attr("rel","external nofollow");$("a[rel='external nofollow']").attr("target","_blank");$("a[href^='#']").removeAttr("target");$("a.ex").removeAttr("rel");$("a.ex").removeAttr("target");
-content="<div class='warn'>本文最后更新于2020-07-20，已超过 1 年没有更新，涉及的内容可能已经失效！</div>";var date1="2020-07-20 14:15:12";date1=date1.replace("-","/");var date2=new Date();var date3=date2.getTime()-new Date(date1).getTime();var days=Math.floor(date3/(24*3600*1000));if(days>=365){document.getElementById("warn").innerHTML=content};
+content="<div class='warn'>本文最后更新于2020-07-27，已超过 1 年没有更新，涉及的内容可能已经失效！</div>";var date1="2020-07-27 17:39:01";date1=date1.replace("-","/");var date2=new Date();var date3=date2.getTime()-new Date(date1).getTime();var days=Math.floor(date3/(24*3600*1000));if(days>=365){document.getElementById("warn").innerHTML=content};
 $('#pjax-container').lightGallery({
     selector: '.back'
 });
@@ -330,6 +384,14 @@ $('#pjax-container').lightGallery({
 
       </div>
 <div class="toc">
+<ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#%E6%AD%A5%E9%AA%A4">步骤：</a></li>
+<li><a href="#%E5%8F%82%E8%80%83%E6%96%87%E6%A1%A3">参考文档：</a></li>
+</ul>
+</li>
+</ul>
 
 </div>
     </div>
