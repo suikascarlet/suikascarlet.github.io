@@ -9,7 +9,7 @@
 <meta name="description" content="绝圣弃智，大盗乃止">
 <meta http-equiv="Access-Control-Allow-Origin" content="*">
 
-<title>ansible tower升级 | すいかの幻想郷</title>
+<title>记一次博科光交排障 | すいかの幻想郷</title>
 <link href="https://suika.rumia.ml/styles/main.css" type="text/css" rel="stylesheet"/>
 <link rel="stylesheet" href="//cdn.bootcss.com/KaTeX/0.10.2/katex.min.css"/>
 <script src="//cdn.bootcss.com/KaTeX/0.10.2/katex.min.js"></script>
@@ -150,7 +150,7 @@ var r = 0;
 <div class="post_page" >
 <div class="post">
   <div class="post_title sm_margin">
-    <h2><a>ansible tower升级</a>
+    <h2><a>记一次博科光交排障</a>
     </h2>
   </div>
 <script>
@@ -193,22 +193,24 @@ function change(){
   <div class="post_details">
     <div class="round-shape-one" ></div>
     <div class="info"><i class="fa fa-calendar"></i>
-<span class="date_info">2020-07-27</span>
+<span class="date_info">2020-08-03</span>
 <i class="fa fa-eye"></i>
 <span class="date_info"><span id="busuanzi_value_page_pv"></span> Views</span>
 <i class="fa fa-bookmark-o"></i>
 <span class="tags_info weaklink">
 	
-	<a href="https://suika.rumia.ml/tag/grPdsMW3W/" class="tag">Ansible</a>
+	<a href="https://suika.rumia.ml/tag/ooWgYXX5n/" class="tag">3PAR</a>
+
+	<a href="https://suika.rumia.ml/tag/K2_I7ea5Tz/" class="tag">Brocade</a>
 
 </span>
 <i class="fa fa-anchor"></i>
 <span style="margin-right:15px">
-708字
+1661字
 </span>
 <i class="fa fa-clock-o"></i>
 <span style="margin-right:15px">
-4 min read
+8 min read
 </span>
 <span style="margin-right:15px">
 </span>
@@ -224,78 +226,129 @@ function change(){
     <div class="post_content markdown">
 	
     <div name="show" id="show">
-	<p class="md_block"><span class="md_line md_line_start md_line_end"><p>Ansible Tower的版本更新的也是莫名的快，去年安装的3.5今年已经到3.7.1了，新的版本可以在线申请license，旧的license快过期了，所以就升个级吧。</p>
-<h2 id="步骤">步骤：</h2>
-<p>升级的时候不能只看升级文档，还要看新版本的support，一开始只看了升级文档，做的时候报操作系统版本不被支持，所以第一步配个较新的rhel源，然后update系统。</p>
-<pre><code># yum update -y
-# systemctl reboot 
-</code></pre>
-<p>下载要升级的版本，并解压：</p>
-<pre><code># wget https://releases.ansible.com/ansible-tower/setup/ansible-tower-setup-3.7.1-1.tar.gz
-# tar xvzf ansible-tower-setup-3.7.1-1.tar.gz
-</code></pre>
-<p>把曾经3.5时候安装的inventory拷贝一份到3.7,注意要把老版本的rabbitmq_host有关的变量更改为routable_hostname，因为新版本移除了rabbitmq：</p>
-<pre><code># cp ansible-tower-bundle-3.5.1-1.el7/inventory ansible-tower-setup-3.7.1-1/
-# cat inventory
-[tower]
-ansible01-ap
-ansible02-ap
-[database]
-[all:vars]
-admin_password='redhat'
+	<p class="md_block"><span class="md_line md_line_start md_line_end"><p>最近一台3PAR一直报CRC错误，3PAR的排障还算简单，就几条命令分析一下输出。<br>
+然而，这次故障比较诡异：</p>
+<pre><code>% showport
+N:S:P      Mode   State ----Node_WWN---- -Port_WWN/HW_Addr- Type Protocol Label Partner FailoverState
+0:0:1    target   ready 2FF70002AC01AE3E   20010002AC01AE3E host       FC     -   1:0:1          none
+0:0:2    target   ready 2FF70002AC01AE3E   20020002AC01AE3E host       FC     -   1:0:2          none
+0:1:1 initiator   ready 50002ACFF701AE3E   50002AC01101AE3E disk      SAS  DP-1       -             -
+0:1:2 initiator   ready 50002ACFF701AE3E   50002AC01201AE3E disk      SAS  DP-2       -             -
+0:3:1      peer offline                -       3464A9EAFD3D free       IP   IP0       -             -
+1:0:1    target   ready 2FF70002AC01AE3E   21010002AC01AE3E host       FC     -   0:0:1          none
+1:0:2    target   ready 2FF70002AC01AE3E   21020002AC01AE3E host       FC     -   0:0:2          none
+1:1:1 initiator   ready 50002ACFF701AE3E   50002AC11101AE3E disk      SAS  DP-1       -             -
+1:1:2 initiator   ready 50002ACFF701AE3E   50002AC11201AE3E disk      SAS  DP-2       -             -
+1:3:1      peer offline                -       94188246CFDD free       IP   IP1       -             -
+-----------------------------------------------------------------------------------------------------
 
-pg_host='10.63.33.156'
-pg_port='5432'
+% showportlesb hist 1:0:1
+ID    ALPA ----Port_WWN---- LinkFail LossSync LossSig PrimSeq InvWord InvCRC
+&lt;1:0:1&gt; 0x15e00 21010002AC01AE3E        2        3       0       0     163  19870
+host42  0x15300 51402EC000F79136        2        0       0       0       0      0
+host43  0x15400 51402EC000F77CFA        2        0       0       0       0      0
+host44  0x15500 51402EC000F79236        2        0       0       0       0      0
+host45  0x15600 51402EC000F77D06        2        0       0       0       0      0
+host48  0x15900 51402EC000F77F0E        2        0       0       0       0      0
+</code></pre>
+<p>一般情况3PAR端<code>showportlesb</code>会显示哪个host报crc错误，这次直接报接在同一交换机上的两个控制器端口&lt;1:0:1&gt;和&lt;0:0:1&gt;故障，这让人不得不怀疑控制器其实是没有故障的，故障在交换机侧，毕竟不同控制器的端口同时报错概率不大。</p>
+<p>于是排查交换机侧：</p>
+<pre><code>&gt; porterrshow 
+          frames      enc    crc    crc    too    too    bad    enc   disc   link   loss   loss   frjt   fbsy    c3timeout    pcs
+       tx     rx      in    err    g_eof  shrt   long   eof     out   c3    fail    sync   sig                   tx    rx     err
+  0:  463.2m 201.1m   0      0      0      0      0      0      0      0      0      0      0      0      0      0      0      0   
+  1:  462.4m 200.9m   0      0      0      0      0      0      0      0      0      0      0      0      0      0      0      0
+ 85:   32.6m  56.0m 424    423    423      0      0      0      0      0      0      0      0      0      0      0      0      0   
+ 86:    4.6m   4.9m   0      0      0      0      0      0      0      0      0      0      0      0      0      0      0      0
 
-pg_database='towerdata'
-pg_username='postgres'
-pg_password='redhat'
+</code></pre>
+<p>果然一个主机的端口报错，考虑端口光衰</p>
+<pre><code>&gt; sfpshow 85
+Identifier:  3    SFP
+Connector:   7    LC
+Transceiver: 540c404000000000 2,4,8_Gbps M5,M6 sw Short_dist
+Encoding:    1    8B10B
+Baud Rate:   85   (units 100 megabaud)
+Length 9u:   0    (units km)
+Length 9u:   0    (units 100 meters)
+Length 50u (OM2):  5    (units 10 meters)
+Length 50u (OM3):  0    (units 10 meters)
+Length 62.5u:2    (units 10 meters)
+Length Cu:   0    (units 1 meter)
+Vendor Name: BROCADE         
+Vendor OUI:  00:05:1e
+Vendor PN:   57-1000012-01   
+Vendor Rev:  A   
+Wavelength:  850  (units nm)
+Options:     003a Loss_of_Sig,Tx_Fault,Tx_Disable
+BR Max:      0   
+BR Min:      0   
+Serial No:   UAF109390000C3N 
+Date Code:   090924  
+DD Type:     0x68
+Enh Options: 0xfa
+Status/Ctrl: 0x82
+Alarm flags[0,1] = 0x5, 0x40
+Warn Flags[0,1] = 0x5, 0x40
+                                           Alarm                  Warn
+                                    low         high       low         high
+Temperature: 42      Centigrade      -10        90         -5          85
+Current:     7.140   mAmps           1.000      17.000     2.000       14.000 
+Voltage:     3292.4  mVolts          2900.0     3700.0     3000.0      3600.0 
+RX Power:    -2.3    dBm (582.9uW)   10.0   uW  1258.9 uW  15.8   uW   1000.0 uW
+TX Power:    -3.3    dBm (263.1 uW)  125.9  uW  631.0  uW  158.5  uW   562.3  uW
 
-routable_username='tower'
-routable_password='redhat'
-routable_cookie=cookiemonster
+State transitions: 1
+Last poll time: 08-03-2020 UTC Thu 08:12:57
 </code></pre>
-<p>因为涉及到clust所以用到了rhscl里的两个包，可以单独下下来建一个源，也可以直接陪rhscl的源，我enable了base和rhcsl两个源。<br>
-然后，在各节点上关闭服务：</p>
-<pre><code>ansible tower -m command -a &quot;ansible-tower-service stop&quot; -i inventory
-</code></pre>
-<p>拆除主备实例关系：</p>
-<pre><code># awx-manage list_instances
-[tower capacity=154]
-ansible01-ap capacity=72 version=3.5.1
-ansible02-ap capacity=72 version=3.5.1
-# awx-manage deprovision_instance --hostname=ansible02-ap
-# awx-manage list_instances
-[tower capacity=0]
-ansible01-ap capacity=0 version=3.5.1
-</code></pre>
-<p>最后就可以运行setup了：</p>
-<pre><code># ./setup -i inventory
-</code></pre>
-<p>本来以为会很顺利，可是还是有点坑，不知道为什么ansible-tower的源通过proxy之后访问特别慢，而且还是总获取到ipv6的地址。所以找了一台可以连外网的机器，做了一个本地源：</p>
-<pre><code># yum repolist
-# yumdownloader --resolve --destdir /root/ansible ansible-tower
-# createrepo -v -g /root/ansible-tower
-</code></pre>
-<p>然而，这只是把tower相关的包下载下来做了一个本地镜像，实际运行setup的时候还是去找tower的源。<br>
-尝试用下面的命令同步整个源到本地，发现速度太慢了</p>
-<pre><code># reposync -l -p -m -g --download-metadata --repoid=ansible-tower --download_path=/root/ansible-tower
-</code></pre>
-<p>于是，翻了下playbook怎么写的，改了一下设置源的地方。有两个地方可以改，改一个就好了:<br>
-1、把源改成刚刚同步的最小的那个源的名：</p>
-<pre><code>cat role/packages_el/defaults/main
-ansible_tower_repo: xxx
-ansible_tower_dependency_repo: xxx
-</code></pre>
-<p>2、把install_tower.yml里检查repo的部分去掉，要改两部分一个是ansible_tower_repo，一个是ansible_tower_dependency_repo，把相关这两个tasks注释掉就好了</p>
-<p>最后，等待setup完成就得到一个新版本的ansible tower<br>
-检查一下服务状态及实例情况，一切正常：</p>
-<pre><code># ansible-tower-service status
-# awx-manage list_instances
-</code></pre>
-<p>登录web，原来的project和inventory都在</p>
-<h2 id="参考文档">参考文档：</h2>
-<p>https://docs.ansible.com/ansible-tower/3.7.1/html/installandreference/upgrade_tower.html#ir-upgrade-existing</p>
+<p><code>TX Power</code>才200多，过低，换之，遂好……</p>
+<h2 id="博科交换机常用的内容如下">博科交换机常用的内容如下：</h2>
+<p><strong>默认IP:</strong><br>
+10.77.77.77<br>
+<strong>默认密码：</strong><br>
+admin/password<br>
+root/fibrane<br>
+<strong>查看、设置网络：</strong><br>
+ipaddrshow<br>
+ipaddrset<br>
+<strong>显示、添加license：</strong><br>
+licenseshow<br>
+licenseadd<br>
+<strong>查看信息：</strong><br>
+switchshow<br>
+alishow<br>
+zoneshow<br>
+cfgshow<br>
+fabrishow<br>
+<strong>配置时钟：</strong><br>
+tsclockserver &quot;ntp server&quot;<br>
+tstimezone --interactive<br>
+<strong>清除状态：</strong><br>
+statsclear</p>
+<p>排障的话就需要用到<code>porterrshow</code>，上面有它的输出，配合statsclear会得到一定时间范围内所有端口错误统计信息：</p>
+<p><strong>Frame(tx/rx)：</strong> tx代表端口发送的数据帧，rx代表端口收到的数据帧。</p>
+<p><strong>Enc_in：</strong> 8b/10b或者64b/6bb数据帧帧内编码错误。在正常情况下20分钟会出现一次这个报错，交换机端口（offline/online）会产生这个错误。</p>
+<p><strong>Crc_err：</strong> 数据帧CRC校验错误。根据实际统计，如果crc_err和enc_out同时出现，通常代表GBIC/SFP有硬件问题。</p>
+<p><strong>Crc_g_eof：</strong> 数据帧CRC校验错误，但是数据帧EOF是正常的。</p>
+<p><strong>Too_long：</strong> 数据帧总长度超过2148字节或者workload长度超过2112字节。</p>
+<p><strong>Too_short：</strong> 小于36个字节长度的帧（workload字节长度等于0）。</p>
+<p><strong>Bad_eof：</strong> 数据帧EOF错误。</p>
+<p><strong>Enc_out：</strong> 8b/10b或者64b/66b数据帧帧外编码错误。在正常情况下20分钟会出现一次这个报错，交换机端口（offline/online）会产生这个报错，另外在HBA卡和交换机端口速率不同，而又使用的是静态配置端口速率的时候也会产生这个错误。单一的这个报错反映光纤线可能有问题；如果是Enc_out和crc_err同时报错代表GBIC/SFP有硬件问题。</p>
+<p><strong>Disc c3：</strong> Class 3被交换机丢弃的数据帧。常见情形帧的目标地址不可达或者源端口还没有FLOGI交换机。这个参数仅仅代表有丢包发生，不能用来判定问题的具体原因。</p>
+<p><strong>Link-fail：</strong> 当交换机端口在LR Receive State时间超过R_A_TOV就会产生这个错误。这个错误经常和loss of signal或者loss of sync同时出现。</p>
+<p><strong>Loss sync：</strong> bit或者transmission-word synchronization失败都会产生这个错误。当交换机端口（offline/online）会产生这个问题。</p>
+<p><strong>Loss sig：</strong> 链路收不到信号。当交换机端口（offline/online）会产生这个问题。</p>
+<p><strong>Frjt：</strong> 用于class 2。代表数据帧无法处理。</p>
+<p><strong>Frbsy：</strong> 用于class 2。数据帧无法在E_D_TOV时间内传输出去，超时后会产生这个问题。</p>
+<p>一般情况下：<br>
+如果仅是&quot;enc out &quot;单独报错主要是因为光纤线的问题。<br>
+如果是&quot;enc out&quot;和&quot;crc err&quot;组合报错主要是GBIC/SFP的问题。</p>
+<p>要确定是源端还是目标端SFP报错，需要再检查&quot;portshow x&quot; 的输出（x代表有问题端口号） 如果下面两对参数 &quot;Lr_in &quot; 和 &quot;Ols_out &quot; 以及 &quot;Lr_out &quot; 和&quot;Ols_in &quot; 的值相同，则表明SFP运行正常如果一个数值明显高于另一个, 连接问题可能出现在交换机连接的对端(&quot;in&quot; &gt; &quot;out&quot;) 或是交换机本身(&quot;out&quot; &gt; &quot;in&quot;).</p>
+<p>如果”Ols_in”的值高于“Lr_out”的值，问题的根源大多数情况与连接的设备相关，(sending those offline sequences) 并且交换机通过&quot;link reset&quot;对此做出响应。</p>
+<p>Loss sync，Loss sig，Link-fail这三个错误在链路初始化的过程中都会产生。当链路不稳定时候，通常这些错误计数器比较高。</p>
+<p>Frjt，Frbsy用于class 2。SAN存储通常使用的是class 3，所以这两个错误很少见。</p>
+<p>Enc_out和Crc_err两个计数器同时比较高，通常需要更换GBIC/SFP。</p>
+<p>Disk c3只能代表链路有丢包现象。原因可能有很多种，具体问题具体分析。如果这个值过高，链路性能可能会受到影响。</p>
 </span></p></div><div id = "warn"></div>
 	<br>
 	<hr>
@@ -322,23 +375,14 @@ ansible_tower_dependency_repo: xxx
 
           <div style="float:right;text-align:right;color:#ccc;font-size:18px;width:50%;">
             Next
-            <a href="https://suika.rumia.ml/post/set-up-proxy-for-podman/">
+            <a href="https://suika.rumia.ml/post/ansible-tower-upgrade/">
               <p class="post-title">
-                <b>Set up proxy for podman</b>
+                <b>ansible tower升级</b>
               </p>
             </a>
           </div>
 
 
-
-          <div style="float:left;text-align:left;color:#ccc;font-size:18px;width:50%;">
-            Previous
-            <a href="https://suika.rumia.ml/post/brocade-switch/">
-              <p class="post-title">
-                <b>记一次博科光交排障</b>
-              </p>
-            </a>
-          </div>
 
 </div>
 <div class="doc_comments">
@@ -382,7 +426,7 @@ imgList.forEach(img => {
   div1.appendChild(figuration)}
 })
 $('img').on('error',function(){$(this).prop('src','https://suika.rumia.ml/media/images/broken.jpg')});$(".md_block a").attr("rel","external nofollow");$("a[rel='external nofollow']").attr("target","_blank");$("a[href^='#']").removeAttr("target");$("a.ex").removeAttr("rel");$("a.ex").removeAttr("target");
-content="<div class='warn'>本文最后更新于2020-07-27，已超过 1 年没有更新，涉及的内容可能已经失效！</div>";var date1="2020-07-27 17:39:01";date1=date1.replace("-","/");var date2=new Date();var date3=date2.getTime()-new Date(date1).getTime();var days=Math.floor(date3/(24*3600*1000));if(days>=365){document.getElementById("warn").innerHTML=content};
+content="<div class='warn'>本文最后更新于2020-08-03，已超过 1 年没有更新，涉及的内容可能已经失效！</div>";var date1="2020-08-03 19:24:01";date1=date1.replace("-","/");var date2=new Date();var date3=date2.getTime()-new Date(date1).getTime();var days=Math.floor(date3/(24*3600*1000));if(days>=365){document.getElementById("warn").innerHTML=content};
 $('#pjax-container').lightGallery({
     selector: '.back'
 });
@@ -396,8 +440,7 @@ $('#pjax-container').lightGallery({
 <ul class="markdownIt-TOC">
 <li>
 <ul>
-<li><a href="#%E6%AD%A5%E9%AA%A4">步骤：</a></li>
-<li><a href="#%E5%8F%82%E8%80%83%E6%96%87%E6%A1%A3">参考文档：</a></li>
+<li><a href="#%E5%8D%9A%E7%A7%91%E4%BA%A4%E6%8D%A2%E6%9C%BA%E5%B8%B8%E7%94%A8%E7%9A%84%E5%86%85%E5%AE%B9%E5%A6%82%E4%B8%8B">博科交换机常用的内容如下：</a></li>
 </ul>
 </li>
 </ul>
