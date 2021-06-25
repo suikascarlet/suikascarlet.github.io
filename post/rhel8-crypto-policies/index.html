@@ -9,7 +9,7 @@
 <meta name="description" content="绝圣弃智，大盗乃止">
 <meta http-equiv="Access-Control-Allow-Origin" content="*">
 
-<title>Too many open files导致登录失败 | すいかの幻想郷</title>
+<title>RHEL8加密策略改变 | すいかの幻想郷</title>
 <link href="https://suika.rumia.ml/styles/main.css" type="text/css" rel="stylesheet"/>
 <link rel="stylesheet" href="//cdn.bootcss.com/KaTeX/0.10.2/katex.min.css"/>
 <script src="//cdn.bootcss.com/KaTeX/0.10.2/katex.min.js"></script>
@@ -159,7 +159,7 @@ var r = 0;
 <div class="post_page" >
 <div class="post">
   <div class="post_title sm_margin">
-    <h2><a>Too many open files导致登录失败</a>
+    <h2><a>RHEL8加密策略改变</a>
     </h2>
   </div>
 <script>
@@ -202,22 +202,22 @@ function change(){
   <div class="post_details">
     <div class="round-shape-one" ></div>
     <div class="info"><i class="fa fa-calendar"></i>
-<span class="date_info">2021-06-24</span>
+<span class="date_info">2021-06-25</span>
 <i class="fa fa-eye"></i>
 <span class="date_info"><span id="busuanzi_value_page_pv"></span> Views</span>
 <i class="fa fa-bookmark-o"></i>
 <span class="tags_info weaklink">
 	
-	<a href="https://suika.rumia.ml/tag/5I_T_o5aA/" class="tag">SSH</a>
+	<a href="https://suika.rumia.ml/tag/DG7P_jQz2S/" class="tag">RHEL</a>
 
 </span>
 <i class="fa fa-anchor"></i>
 <span style="margin-right:15px">
-374字
+421字
 </span>
 <i class="fa fa-clock-o"></i>
 <span style="margin-right:15px">
-2 min read
+3 min read
 </span>
 <span style="margin-right:15px">
 </span>
@@ -233,38 +233,40 @@ function change(){
     <div class="post_content markdown">
 	
     <div name="show" id="show">
-	<p class="md_block"><span class="md_line md_line_start md_line_end"><p>发生个诡异的故障，用户ssh登录可以成功，但是马上session就被关闭了。</p>
-<pre><code>ssh root@xxxx
-Password:
-Last Login: Thu Jun 24 14:26:00 2021 from xxxxx
-Connection to xxxx closed.
-</code></pre>
-<p>就是ssh 加上 -vvv看到的也是这种现象，既明显登录成功了，但立即被关闭了。</p>
-<p>好在有其他人还有个session连在上面，看了日志有类似的报错：</p>
-<pre><code>Accepted keyboard-interactive/pam for usr_ins from xxx port xxx ssh2
-pam_limits(sshd:session): Could not set limit for 'nofile': Operation not permitted
-error: PAM: pam_open_session(): Permission denied
-</code></pre>
-<p>几经排查，发现是fs.nr_open的锅。有人改了/etc/security/limits.conf中的hard nofile，改的这个值比fs.nr_open大了，改小hard nofile或改大fs.nr_open就解决了。</p>
-<pre><code>sysctl -w fs.nr_open = xxxx
-</code></pre>
-<p>好在有个高权限的session还活着，不然要重启挂光盘修改了。</p>
-<p>总结：<br>
-只要在/var/log/secure中看到如下类似报错：</p>
-<pre><code>login: pam_unix(remote:session): session opened for user root by (uid=0)
-login: Permission denied
-login: pam_limits(remote:session): Could not set limit for 'nofile': Operation not permitted
+	<p class="md_block"><span class="md_line md_line_start md_line_end"><p>升级了rhel8.4，发现AD域的账户登不上去了。<br>
+日志显示的问题出在：</p>
+<pre><code>(2021-06-24 17:34:18): [krb5_child[39535]] [get_and_save_tgt] (0x0020): 1757: [-1765328370][KDC has no support for encryption type]
+(2021-06-24 17:34:18): [krb5_child[39535]] [map_krb5_error] (0x0020): 1849: [-1765328370][KDC has no support for encryption type]
+(2021-06-24 17:35:46): [krb5_child[39555]] [validate_tgt] (0x0020): TGT failed verification using key for [host/xxxxx@xxxx.COM].
+(2021-06-24 17:35:46): [krb5_child[39555]] [get_and_save_tgt] (0x0020): 1757: [-1765328370][KDC has no support for encryption type]
+(2021-06-24 17:35:46): [krb5_child[39555]] [map_krb5_error] (0x0020): 1849: [-1765328370][KDC has no support for encryption type]
 
-su: pam_limits(su:session): Could not set limit for 'nofile': Operation not permitted
-su: pam_unix(su:session): session opened for user root by test(uid=501)
-
-pam: gdm-password: pam_limits(gdm-password:session): Could not set limit for 'nofile': Operation not 
-permitted
-pam: gdm-password: pam_unix(gdm-password:session): session opened for user root by (uid=0)
 </code></pre>
-<p>那么就是此类问题引起的。<br>
-另外，fs.nr_open的默认值是1024*1024 = 1048576，最大值是由sysctl_nr_open_max在内核控制的，在X86服务器上是2147483584</p>
-<p>这又增强了对linux一切皆文件的理解，系统文件不能打开了session当然无法创建。</p>
+<p>这是什么鬼？KDC不支持的加密类型？？？可是加密类型是default啊。</p>
+<pre><code># cat etc/crypto-policies/config
+DEFAULT
+</code></pre>
+<p>于是去查了一下，发现真的是加密类型变了，redhat是这么写的：</p>
+<pre><code> By default, SSSD supports RC4, AES-128, and AES-256 Kerberos encryption types.
+
+RC4 encryption has been deprecated and disabled by default in RHEL 8, as it is considered less secure than the newer AES-128 and AES-256 encryption types. In contrast, Active Directory (AD) user credentials and trusts between AD domains support RC4 encryption and they might not support AES encryption types. 
+</code></pre>
+<p><a href="https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/integrating_rhel_systems_directly_with_windows_active_directory/connecting-rhel-systems-directly-to-ad-using-sssd_integrating-rhel-systems-directly-with-active-directory#ensuring-support-for-common-encryption-types-in-ad-and-rhel_connecting-rhel-systems-directly-to-ad-using-sssd">Ensuring support for common encryption types in AD and RHEL</a><br>
+<a href="https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/8.3_release_notes/rhel-8-3-0-release#enhancement_identity-management"> Identity Management</a></p>
+<p>既然找到原因，那就好解决了：<br>
+RHEL8.3及以后比较简单，一条命令：</p>
+<pre><code># update-crypto-policies --set DEFAULT:AD-SUPPORT
+</code></pre>
+<p>提示要重启，实际不重启也可以。</p>
+<p>之前的版本虽然不存在这个问题，但要修改默认加密策略的话要麻烦一点：</p>
+<pre><code># vim /etc/crypto-policies/back-ends/krb5.config
+添加+rc4在后面
+[libdefaults]
+permitted_enctypes = aes256-cts-hmac-sha1-96 aes256-cts-hmac-sha384-192 camellia256-cts-cmac aes128-cts-hmac-sha1-96 aes128-cts-hmac-sha256-128 camellia128-cts-cmac +rc4
+</code></pre>
+<p>具体见这里：<a href="https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/integrating_rhel_systems_directly_with_windows_active_directory/connecting-rhel-systems-directly-to-ad-using-sssd_integrating-rhel-systems-directly-with-active-directory#ensuring-support-for-common-encryption-types-in-ad-and-rhel_connecting-rhel-systems-directly-to-ad-using-sssd">修改方法</a><br>
+文档中说是8.2的最麻烦，但实际用8.0和8.1的方法改了也OK</p>
+<p>节末的教训是，多看文档总是没有坏处的。</p>
 </span></p></div><div id = "warn"></div>
 	<br>
 	<hr>
@@ -291,23 +293,14 @@ pam: gdm-password: pam_unix(gdm-password:session): session opened for user root 
 
           <div style="float:right;text-align:right;color:#ccc;font-size:18px;width:50%;">
             Next
-            <a href="https://suika.rumia.ml/post/opneshift-46-install/">
+            <a href="https://suika.rumia.ml/post/Operation-not-permitted/">
               <p class="post-title">
-                <b>Opne Shift 4.6在线安装</b>
+                <b>Too many open files导致登录失败</b>
               </p>
             </a>
           </div>
 
 
-
-          <div style="float:left;text-align:left;color:#ccc;font-size:18px;width:50%;">
-            Previous
-            <a href="https://suika.rumia.ml/post/rhel8-crypto-policies/">
-              <p class="post-title">
-                <b>RHEL8加密策略改变</b>
-              </p>
-            </a>
-          </div>
 
 </div>
 <div class="doc_comments">
@@ -351,7 +344,7 @@ imgList.forEach(img => {
   div1.appendChild(figuration)}
 })
 $('img').on('error',function(){$(this).prop('src','https://suika.rumia.ml/media/images/broken.jpg')});$(".md_block a").attr("rel","external nofollow");$("a[rel='external nofollow']").attr("target","_blank");$("a[href^='#']").removeAttr("target");$("a.ex").removeAttr("rel");$("a.ex").removeAttr("target");
-content="<div class='warn'>本文最后更新于2021-06-24，已超过 1 年没有更新，涉及的内容可能已经失效！</div>";var date1="2021-06-24 15:42:08";date1=date1.replace("-","/");var date2=new Date();var date3=date2.getTime()-new Date(date1).getTime();var days=Math.floor(date3/(24*3600*1000));if(days>=365){document.getElementById("warn").innerHTML=content};
+content="<div class='warn'>本文最后更新于2021-06-25，已超过 1 年没有更新，涉及的内容可能已经失效！</div>";var date1="2021-06-25 17:27:15";date1=date1.replace("-","/");var date2=new Date();var date3=date2.getTime()-new Date(date1).getTime();var days=Math.floor(date3/(24*3600*1000));if(days>=365){document.getElementById("warn").innerHTML=content};
 $('#pjax-container').lightGallery({
     selector: '.back'
 });
